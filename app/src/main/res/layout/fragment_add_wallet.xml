@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bottom_sheet_bg"
+    android:padding="24dp">
+
+    <!-- Handle bar -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:background="@color/purple_light"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- Title -->
+    <TextView
+        android:text="New Wallet"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- Wallet Name -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Wallet Name (e.g. Cash, Bank)"
+        android:layout_marginBottom="20dp"
+        style="@style/DarkInputLayout">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_wallet_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Icon Label -->
+    <TextView
+        android:text="Icon"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- Icon Row -->
+    <LinearLayout
+        android:id="@+id/icon_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="20dp">
+
+        <!-- Wallet Icon -->
+        <LinearLayout
+            android:id="@+id/icon_wallet"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_wallet"
+                android:background="@drawable/circle_bg"
+                android:backgroundTint="@color/card_dark"
+                android:padding="8dp"
+                android:tint="@color/text_secondary"/>
+            <TextView
+                android:text="Wallet"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <!-- Bank Icon -->
+        <LinearLayout
+            android:id="@+id/icon_bank"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_bank"
+                android:background="@drawable/circle_bg"
+                android:backgroundTint="@color/card_dark"
+                android:padding="8dp"
+                android:tint="@color/text_secondary"/>
+            <TextView
+                android:text="Bank"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <!-- Card Icon -->
+        <LinearLayout
+            android:id="@+id/icon_card"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_card"
+                android:background="@drawable/circle_bg"
+                android:backgroundTint="@color/card_dark"
+                android:padding="8dp"
+                android:tint="@color/text_secondary"/>
+            <TextView
+                android:text="Card"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <!-- Savings Icon -->
+        <LinearLayout
+            android:id="@+id/icon_savings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_savings"
+                android:background="@drawable/circle_bg"
+                android:backgroundTint="@color/card_dark"
+                android:padding="8dp"
+                android:tint="@color/text_secondary"/>
+            <TextView
+                android:text="Savings"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <!-- Other Icon -->
+        <LinearLayout
+            android:id="@+id/icon_other"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_other"
+                android:background="@drawable/circle_bg"
+                android:backgroundTint="@color/card_dark"
+                android:padding="8dp"
+                android:tint="@color/text_secondary"/>
+            <TextView
+                android:text="Other"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Color Label -->
+    <TextView
+        android:text="Color"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- Color Row -->
+    <LinearLayout
+        android:id="@+id/color_row"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp">
+
+        <View android:id="@+id/color_purple"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/circle_bg"
+            android:backgroundTint="#7B5EA7"
+            android:alpha="0.5"/>
+
+        <View android:id="@+id/color_blue"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/circle_bg"
+            android:backgroundTint="#2196F3"
+            android:alpha="0.5"/>
+
+        <View android:id="@+id/color_green"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/circle_bg"
+            android:backgroundTint="#4CAF50"
+            android:alpha="0.5"/>
+
+        <View android:id="@+id/color_red"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/circle_bg"
+            android:backgroundTint="#F44336"
+            android:alpha="0.5"/>
+
+        <View android:id="@+id/color_orange"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/circle_bg"
+            android:backgroundTint="#FF9800"
+            android:alpha="0.5"/>
+
+    </LinearLayout>
+
+    <!-- Save Button -->
+    <Button
+        android:id="@+id/btn_save_wallet"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Create Wallet"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/purple_main"
+        android:textColor="@color/text_primary"
+        style="@style/Widget.MaterialComponents.Button"/>
+
+</LinearLayout>

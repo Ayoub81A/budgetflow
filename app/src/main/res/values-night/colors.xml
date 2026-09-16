@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_dark">#0F0E17</color>
+    <color name="card_dark">#1E1B2E</color>
+    <color name="purple_main">#7B5EA7</color>
+    <color name="purple_light">#A78BCA</color>
+    <color name="income_green">#4CAF50</color>
+    <color name="expense_red">#F44336</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#9E9E9E</color>
+    <color name="nav_bg">#1E1B2E</color>
+</resources>
