@@ -315,29 +315,9 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
 
     private void showQuickAddCategoryDialog(CategoryViewModel categoryViewModel) {
         if (getContext() == null) return;
-        android.widget.EditText input = new android.widget.EditText(getContext());
-        input.setHint("Category name");
-        input.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
-        android.widget.FrameLayout container = new android.widget.FrameLayout(requireContext());
-        int pad = (int) (20 * getResources().getDisplayMetrics().density);
-        android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(pad, pad / 2, pad, 0);
-        input.setLayoutParams(lp);
-        container.addView(input);
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle("New Category")
-                .setView(container)
-                .setPositiveButton("Add", (dialog, which) -> {
-                    String name = input.getText().toString().trim();
-                    if (!name.isEmpty()) {
-                        categoryViewModel.insert(new CategoryModel(name, "ic_wallet", "#FF6B6B", true));
-                        selectedCategory = name;
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        CategoryEditorHelper.showEditorDialog(requireContext(), categoryViewModel, null, newCat -> {
+            selectedCategory = newCat.getName();
+        });
     }
 
     private int resolveIconRes(String iconName) {
@@ -364,6 +344,24 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
     @Override
     public int getTheme() {
         return R.style.BottomSheetTheme;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        android.app.Dialog dialog = getDialog();
+        if (dialog instanceof com.google.android.material.bottomsheet.BottomSheetDialog) {
+            com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog =
+                    (com.google.android.material.bottomsheet.BottomSheetDialog) dialog;
+            android.widget.FrameLayout bottomSheet =
+                    bottomSheetDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                com.google.android.material.bottomsheet.BottomSheetBehavior<android.widget.FrameLayout> behavior =
+                        com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+                behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+                behavior.setSkipCollapsed(true);
+            }
+        }
     }
 
     private void highlightInterval(View root, Button selected) {

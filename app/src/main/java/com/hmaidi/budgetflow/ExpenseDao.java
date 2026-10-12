@@ -56,6 +56,9 @@ public interface ExpenseDao {
     @Query("DELETE FROM expenses WHERE isDeleted = 1")
     void emptyTrash();
 
+    @Query("UPDATE expenses SET category = :newCategory WHERE category = :oldCategory")
+    void reassignCategory(String oldCategory, String newCategory);
+
     @Delete
     void delete(ExpenseModel expense);
 

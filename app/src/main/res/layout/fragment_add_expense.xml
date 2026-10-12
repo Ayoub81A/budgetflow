@@ -11,7 +11,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@drawable/bottom_sheet_bg"
-        android:padding="24dp">
+        android:padding="20dp"
+        android:paddingTop="12dp">
 
         <!-- Handle bar -->
         <View
@@ -19,26 +20,26 @@
             android:layout_height="4dp"
             android:background="@color/purple_light"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="20dp" />
+            android:layout_marginBottom="12dp" />
 
         <!-- Title -->
         <TextView
             android:text="Add Transaction"
             android:textColor="@color/text_primary"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp" />
+            android:layout_marginBottom="12dp" />
 
         <!-- Income / Expense Toggle -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="44dp"
             android:orientation="horizontal"
             android:background="@drawable/pill_toggle_bg"
-            android:padding="4dp"
-            android:layout_marginBottom="20dp">
+            android:padding="3dp"
+            android:layout_marginBottom="12dp">
 
             <Button
                 android:id="@+id/btn_expense"
@@ -69,14 +70,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Amount"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="10dp"
             style="@style/DarkInputLayout">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_amount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="56dp"
+                android:minHeight="50dp"
                 android:inputType="numberDecimal"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary" />
@@ -88,14 +89,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Title"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="10dp"
             style="@style/DarkInputLayout">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="56dp"
+                android:minHeight="50dp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary" />
 
@@ -104,8 +105,8 @@
         <!-- Fixed height wrapper - same for both tabs -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="72dp"
-            android:layout_marginBottom="16dp">
+            android:layout_height="64dp"
+            android:layout_marginBottom="10dp">
 
             <!-- Category Container (Expense) -->
             <LinearLayout
@@ -150,40 +151,54 @@
 
         </FrameLayout>
 
-        <!-- Date Field -->
-        <com.google.android.material.textfield.TextInputLayout
+        <!-- Date & Wallet Side-by-Side Row -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Date"
-            android:layout_marginBottom="24dp"
-            app:endIconMode="custom"
-            app:endIconDrawable="@drawable/ic_calendar"
-            style="@style/DarkInputLayout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_date"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="false"
-                android:cursorVisible="false"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Wallet Selector -->
-        <TextView
-            android:id="@+id/tv_selected_wallet"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Select Wallet"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
+            android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/rounded_input_bg" />
+            android:layout_marginBottom="12dp">
+
+            <!-- Date Field -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:hint="Date"
+                app:endIconMode="custom"
+                app:endIconDrawable="@drawable/ic_calendar"
+                style="@style/DarkInputLayout">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="50dp"
+                    android:focusable="false"
+                    android:cursorVisible="false"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Wallet Selector -->
+            <TextView
+                android:id="@+id/tv_selected_wallet"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="Select Wallet"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:gravity="center_vertical"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/rounded_input_bg" />
+
+        </LinearLayout>
 
         <!-- Recurring Toggle -->
         <LinearLayout
@@ -191,12 +206,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="12dp">
 
             <TextView
                 android:text="Recurring"
                 android:textColor="@color/text_primary"
-                android:textSize="15sp"
+                android:textSize="14sp"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
@@ -214,7 +229,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             android:visibility="gone">
 
             <Button
@@ -270,7 +285,7 @@
         <Button
             android:id="@+id/btn_save"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="50dp"
             android:text="Save"
             android:textSize="16sp"
             android:textStyle="bold"

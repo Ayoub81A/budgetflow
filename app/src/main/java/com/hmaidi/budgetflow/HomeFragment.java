@@ -335,28 +335,86 @@ public class HomeFragment extends Fragment {
 
     private void showAddFundsDialog(SavingsGoal goal) {
         if (getContext() == null) return;
+        WalletViewModel walletViewModel = new ViewModelProvider(requireActivity()).get(WalletViewModel.class);
+        androidx.lifecycle.Observer<List<Wallet>> observer = new androidx.lifecycle.Observer<List<Wallet>>() {
+            @Override
+            public void onChanged(List<Wallet> wallets) {
+                walletViewModel.getAllWallets().removeObserver(this);
+                if (getContext() == null) return;
+                if (wallets == null || wallets.isEmpty()) {
+                    Toast.makeText(getContext(), "Please create a wallet first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                showDepositDialogWithWallets(goal, wallets);
+            }
+        };
+        walletViewModel.getAllWallets().observe(getViewLifecycleOwner(), observer);
+    }
+
+    private void showDepositDialogWithWallets(SavingsGoal goal, List<Wallet> wallets) {
+        if (getContext() == null) return;
+        LinearLayout layout = new LinearLayout(getContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        layout.setPadding(pad, pad / 2, pad, 0);
+
         EditText etAmount = new EditText(getContext());
         etAmount.setHint("Amount to deposit");
         etAmount.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         etAmount.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        layout.addView(etAmount);
 
-        FrameLayout container = new FrameLayout(requireContext());
-        int pad = (int) (20 * getResources().getDisplayMetrics().density);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(pad, pad / 2, pad, 0);
-        etAmount.setLayoutParams(lp);
-        container.addView(etAmount);
+        final int[] selectedWalletIndex = {0};
+        TextView tvWallet = new TextView(getContext());
+        tvWallet.setText("Deduct from: " + wallets.get(0).getName() + " (" + CurrencyHelper.format(getContext(), wallets.get(0).getBalance()) + ") ▾");
+        tvWallet.setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_light));
+        tvWallet.setTextSize(13);
+        tvWallet.setPadding(0, (int) (12 * getResources().getDisplayMetrics().density), 0, (int) (8 * getResources().getDisplayMetrics().density));
+
+        String[] walletNames = new String[wallets.size()];
+        for (int i = 0; i < wallets.size(); i++) {
+            walletNames[i] = wallets.get(i).getName() + " (" + CurrencyHelper.format(getContext(), wallets.get(i).getBalance()) + ")";
+        }
+
+        tvWallet.setOnClickListener(v -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Select Source Wallet")
+                    .setItems(walletNames, (d, which) -> {
+                        selectedWalletIndex[0] = which;
+                        tvWallet.setText("Deduct from: " + walletNames[which] + " ▾");
+                    })
+                    .show();
+        });
+        layout.addView(tvWallet);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("Add Funds: " + goal.getTitle())
-                .setView(container)
+                .setTitle("Deposit to: " + goal.getTitle())
+                .setView(layout)
                 .setPositiveButton("Deposit", (dialog, which) -> {
                     String val = etAmount.getText().toString().trim();
                     if (!val.isEmpty()) {
                         try {
                             double added = Double.parseDouble(val);
+                            if (added <= 0) return;
+                            Wallet chosenWallet = wallets.get(selectedWalletIndex[0]);
+
+                            // 1. Add funds to savings goal
                             goalsViewModel.addFunds(goal.getId(), added);
-                            Toast.makeText(getContext(), "Added " + CurrencyHelper.format(getContext(), added) + " to goal!", Toast.LENGTH_SHORT).show();
+
+                            // 2. Automatically record as an expense transaction and deduct from wallet
+                            Calendar now = Calendar.getInstance();
+                            String date = now.get(Calendar.DAY_OF_MONTH) + "/" + (now.get(Calendar.MONTH) + 1) + "/" + now.get(Calendar.YEAR);
+                            ExpenseModel expense = new ExpenseModel(
+                                    "Savings: " + goal.getTitle(),
+                                    date,
+                                    added,
+                                    "Savings",
+                                    true, // isExpense
+                                    chosenWallet.getId()
+                            );
+                            viewModel.insert(expense);
+
+                            Toast.makeText(getContext(), "Deposited " + CurrencyHelper.format(getContext(), added) + " from " + chosenWallet.getName() + "!", Toast.LENGTH_SHORT).show();
                         } catch (Exception ignored) {}
                     }
                 })

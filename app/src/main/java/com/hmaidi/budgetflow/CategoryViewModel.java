@@ -53,7 +53,26 @@ public class CategoryViewModel extends AndroidViewModel {
         executor.execute(() -> categoryDao.update(category));
     }
 
+    public void updateCategoryAndRenameExpenses(CategoryModel category, String oldName) {
+        executor.execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(getApplication());
+            if (!category.getName().equals(oldName)) {
+                db.expenseDao().reassignCategory(oldName, category.getName());
+            }
+            categoryDao.update(category);
+        });
+    }
+
     public void delete(CategoryModel category) {
-        executor.execute(() -> categoryDao.delete(category));
+        deleteCategoryAndReassign(category, "Uncategorized");
+    }
+
+    public void deleteCategoryAndReassign(CategoryModel category, String fallbackCategory) {
+        executor.execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(getApplication());
+            // Reassign any transactions that used this category to fallbackCategory
+            db.expenseDao().reassignCategory(category.getName(), fallbackCategory);
+            categoryDao.delete(category);
+        });
     }
 }

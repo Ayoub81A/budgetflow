@@ -517,64 +517,55 @@ public class UserFragment extends Fragment {
     }
 
     private void showCategoriesDialog() {
+        if (getContext() == null) return;
         CategoryViewModel categoryViewModel = new ViewModelProvider(requireActivity()).get(CategoryViewModel.class);
-        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), categories -> {
-            if (categories == null) return;
-            String[] catNames = new String[categories.size()];
-            for (int i = 0; i < categories.size(); i++) {
-                CategoryModel c = categories.get(i);
-                catNames[i] = c.getName() + " (" + (c.isExpense() ? "Expense" : "Income") + ")";
+        androidx.lifecycle.Observer<List<CategoryModel>> observer = new androidx.lifecycle.Observer<List<CategoryModel>>() {
+            @Override
+            public void onChanged(List<CategoryModel> categories) {
+                categoryViewModel.getAllCategories().removeObserver(this);
+                if (getContext() == null || categories == null) return;
+                showCategoriesListDialog(categoryViewModel, categories);
             }
-
-            new AlertDialog.Builder(requireContext())
-                    .setTitle("Custom Categories")
-                    .setItems(catNames, (dialog, which) -> {
-                        CategoryModel selectedCat = categories.get(which);
-                        new AlertDialog.Builder(requireContext())
-                                .setTitle(selectedCat.getName())
-                                .setMessage("Type: " + (selectedCat.isExpense() ? "Expense" : "Income"))
-                                .setNegativeButton("Delete", (d, w) -> {
-                                    categoryViewModel.delete(selectedCat);
-                                    Toast.makeText(getContext(), "Category deleted", Toast.LENGTH_SHORT).show();
-                                })
-                                .setPositiveButton("Close", null)
-                                .show();
-                    })
-                    .setPositiveButton("+ Add Category", (dialog, which) -> {
-                        showAddCategoryDialog(categoryViewModel);
-                    })
-                    .setNegativeButton("Close", null)
-                    .show();
-        });
+        };
+        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), observer);
     }
 
-    private void showAddCategoryDialog(CategoryViewModel categoryViewModel) {
-        LinearLayout layout = new LinearLayout(getContext());
-        layout.setOrientation(LinearLayout.VERTICAL);
-        int pad = (int) (20 * getResources().getDisplayMetrics().density);
-        layout.setPadding(pad, pad / 2, pad, 0);
-
-        EditText etName = new EditText(getContext());
-        etName.setHint("Category Name");
-        etName.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
-        layout.addView(etName);
-
-        String[] types = {"Expense", "Income"};
-        final int[] selectedType = {0};
+    private void showCategoriesListDialog(CategoryViewModel categoryViewModel, List<CategoryModel> categories) {
+        String[] catNames = new String[categories.size()];
+        for (int i = 0; i < categories.size(); i++) {
+            CategoryModel c = categories.get(i);
+            catNames[i] = c.getName() + " (" + (c.isExpense() ? "Expense" : "Income") + ")";
+        }
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("New Category")
-                .setView(layout)
-                .setSingleChoiceItems(types, 0, (d, which) -> selectedType[0] = which)
-                .setPositiveButton("Create", (dialog, which) -> {
-                    String name = etName.getText().toString().trim();
-                    if (!name.isEmpty()) {
-                        boolean isExp = selectedType[0] == 0;
-                        categoryViewModel.insert(new CategoryModel(name, "ic_wallet", isExp ? "#FF6B6B" : "#00B4D8", isExp));
-                        Toast.makeText(getContext(), "Category '" + name + "' created!", Toast.LENGTH_SHORT).show();
-                    }
+                .setTitle("Custom Categories (" + categories.size() + ")")
+                .setItems(catNames, (dialog, which) -> {
+                    CategoryModel selectedCat = categories.get(which);
+                    String[] actions = {"Edit Category", "Delete Category"};
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle(selectedCat.getName())
+                            .setItems(actions, (d, actIdx) -> {
+                                if (actIdx == 0) {
+                                    CategoryEditorHelper.showEditorDialog(requireContext(), categoryViewModel, selectedCat, null);
+                                } else {
+                                    new AlertDialog.Builder(requireContext())
+                                            .setTitle("Delete Category")
+                                            .setMessage("Delete '" + selectedCat.getName() + "'?\n\nAll existing transactions with this category will automatically be moved to 'Uncategorized'.")
+                                            .setPositiveButton("Delete", (d2, w2) -> {
+                                                categoryViewModel.deleteCategoryAndReassign(selectedCat, "Uncategorized");
+                                                Toast.makeText(getContext(), "'" + selectedCat.getName() + "' deleted. Transactions moved to Uncategorized.", Toast.LENGTH_SHORT).show();
+                                            })
+                                            .setNegativeButton("Cancel", null)
+                                            .show();
+                                }
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
                 })
-                .setNegativeButton("Cancel", null)
+                .setPositiveButton("+ Add Category", (dialog, which) -> {
+                    CategoryEditorHelper.showEditorDialog(requireContext(), categoryViewModel, null, null);
+                })
+                .setNegativeButton("Close", null)
                 .show();
     }
 }
