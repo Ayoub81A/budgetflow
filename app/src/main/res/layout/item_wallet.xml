@@ -25,7 +25,7 @@
             android:background="@drawable/circle_bg"
             android:backgroundTint="@color/purple_main"
             android:padding="10dp"
-            android:tint="@color/text_primary"/>
+            app:tint="@android:color/white"/>
 
         <!-- Wallet Name + Transaction Count -->
         <LinearLayout

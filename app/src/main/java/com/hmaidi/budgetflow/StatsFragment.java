@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.github.mikephil.charting.charts.PieChart;
@@ -22,6 +23,8 @@ public class StatsFragment extends Fragment {
     PieChart pieChart;
     TextView tvIncome, tvExpense, tvBalance;
     ExpenseViewModel viewModel;
+    private double totalIncomeAmount = 0;
+    private double totalExpenseAmount = 0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -39,8 +42,10 @@ public class StatsFragment extends Fragment {
         // Observe all expenses to build chart
         viewModel.getAllExpenses().observe(getViewLifecycleOwner(), expenses -> {
             if (expenses == null || expenses.isEmpty()) {
+                pieChart.clear();
                 pieChart.setNoDataText("No expenses yet");
-                pieChart.setNoDataTextColor(Color.WHITE);
+                pieChart.setNoDataTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+                pieChart.invalidate();
                 return;
             }
             buildPieChart(expenses);
@@ -48,14 +53,14 @@ public class StatsFragment extends Fragment {
 
         // Observe totals for summary
         viewModel.getTotalIncome().observe(getViewLifecycleOwner(), total -> {
-            double amount = total != null ? total : 0;
-            tvIncome.setText("+" + CurrencyHelper.format(getContext(), amount));
+            totalIncomeAmount = total != null ? total : 0;
+            tvIncome.setText("+" + CurrencyHelper.format(getContext(), totalIncomeAmount));
             updateBalance();
         });
 
         viewModel.getTotalExpenses().observe(getViewLifecycleOwner(), total -> {
-            double amount = total != null ? total : 0;
-            tvExpense.setText("-" + CurrencyHelper.format(getContext(), amount));
+            totalExpenseAmount = total != null ? total : 0;
+            tvExpense.setText("-" + CurrencyHelper.format(getContext(), totalExpenseAmount));
             updateBalance();
         });
 
@@ -102,12 +107,17 @@ public class StatsFragment extends Fragment {
         pieChart.setData(data);
 
         // Style the chart
-        pieChart.setBackgroundColor(Color.parseColor("#1E1B2E"));
-        pieChart.setHoleColor(Color.parseColor("#1E1B2E"));
+        int cardColor = ContextCompat.getColor(requireContext(), R.color.card_dark);
+        int textPrimary = ContextCompat.getColor(requireContext(), R.color.text_primary);
+
+        pieChart.setBackgroundColor(Color.TRANSPARENT);
+        pieChart.setHoleColor(cardColor);
         pieChart.setHoleRadius(50f);
+        pieChart.setTransparentCircleColor(cardColor);
         pieChart.setTransparentCircleRadius(55f);
+        pieChart.setTransparentCircleAlpha(110);
         pieChart.getDescription().setEnabled(false);
-        pieChart.getLegend().setTextColor(Color.WHITE);
+        pieChart.getLegend().setTextColor(textPrimary);
         pieChart.getLegend().setTextSize(12f);
         pieChart.setEntryLabelColor(Color.WHITE);
         pieChart.setEntryLabelTextSize(11f);
@@ -116,19 +126,7 @@ public class StatsFragment extends Fragment {
     }
 
     private void updateBalance() {
-        try {
-            String incomeStr = tvIncome.getText().toString()
-                    .replaceAll("[^\\d.]", ""); // removes everything except digits and dot
-            String expenseStr = tvExpense.getText().toString()
-                    .replaceAll("[^\\d.]", "");
-
-            double income = incomeStr.isEmpty() ? 0 : Double.parseDouble(incomeStr);
-            double expense = expenseStr.isEmpty() ? 0 : Double.parseDouble(expenseStr);
-
-            double balance = income - expense;
-            tvBalance.setText(CurrencyHelper.format(getContext(), balance));
-        } catch (NumberFormatException e) {
-            tvBalance.setText(CurrencyHelper.format(getContext(), 0));
-        }
+        double balance = totalIncomeAmount - totalExpenseAmount;
+        tvBalance.setText(CurrencyHelper.format(getContext(), balance));
     }
 }

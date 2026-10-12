@@ -27,4 +27,5 @@ public class ExpenseViewModel extends AndroidViewModel {
     public LiveData<List<ExpenseModel>> getAllExpenses() { return allExpenses; }
     public LiveData<Double> getTotalExpenses() { return totalExpenses; }
     public LiveData<Double> getTotalIncome() { return totalIncome; }
+    public LiveData<List<ExpenseModel>> getAllRecurringExpenses() { return repository.getAllRecurringExpenses(); }
 }

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg_dark"
     android:padding="16dp"
-    android:paddingBottom="100dp"
+    android:paddingBottom="88dp"
     android:clipToPadding="false">
 
     <LinearLayout
@@ -53,7 +53,7 @@
                         android:background="@drawable/circle_bg"
                         android:backgroundTint="@color/purple_main"
                         android:padding="18dp"
-                        android:tint="@color/text_primary"
+                        app:tint="@android:color/white"
                         android:scaleType="centerCrop"/>
 
                     <ImageView
@@ -64,7 +64,7 @@
                         android:background="@drawable/circle_bg"
                         android:backgroundTint="@color/purple_light"
                         android:padding="6dp"
-                        android:tint="@color/text_primary"
+                        app:tint="@android:color/white"
                         android:layout_gravity="bottom|end"/>
 
                 </FrameLayout>
@@ -89,6 +89,7 @@
                     android:id="@+id/btn_edit_name"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
+                    android:minHeight="36dp"
                     android:text="Edit Name"
                     android:textSize="12sp"
                     android:backgroundTint="@color/bg_dark"
@@ -124,10 +125,10 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp">
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_wallet" android:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_wallet" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
                 <TextView android:text="Currency" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
                 <TextView android:id="@+id/tv_current_currency" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp"/>
-                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_stats" android:tint="@color/text_secondary"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron_right" app:tint="@color/text_secondary"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -146,10 +147,10 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp">
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_stats" android:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_budget" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
                 <TextView android:text="Monthly Budget" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
                 <TextView android:id="@+id/tv_budget_value" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp"/>
-                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_stats" android:tint="@color/text_secondary"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron_right" app:tint="@color/text_secondary"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -167,7 +168,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp">
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_user" android:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_notifications" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
                 <TextView android:text="Notifications" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switch_notifications"
@@ -191,7 +192,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp">
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_entertainment" android:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_moon" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
                 <TextView android:text="Dark Theme" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switch_theme"
@@ -216,7 +217,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp">
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_food" android:tint="@color/expense_red" android:layout_marginEnd="16dp"/>
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_delete" app:tint="@color/expense_red" android:layout_marginEnd="16dp"/>
                 <TextView android:text="Clear All Data" android:textColor="@color/expense_red" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -234,7 +235,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp">
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_stats" android:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_info" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
                 <TextView android:text="Version" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
                 <TextView android:text="1.0.0" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
             </LinearLayout>

@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="16dp"
-        android:paddingBottom="100dp"
+        android:paddingBottom="88dp"
         android:clipToPadding="false">
 
         <LinearLayout
@@ -31,7 +31,8 @@
             <!-- Total Balance Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
+                android:layout_height="wrap_content"
+                android:minHeight="120dp"
                 android:layout_marginBottom="24dp"
                 app:cardCornerRadius="24dp"
                 app:cardBackgroundColor="@color/purple_main"
@@ -54,7 +55,7 @@
                     <TextView
                         android:id="@+id/tv_total_balance"
                         android:text="$0.00"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@android:color/white"
                         android:textSize="32sp"
                         android:textStyle="bold"
                         android:layout_width="wrap_content"

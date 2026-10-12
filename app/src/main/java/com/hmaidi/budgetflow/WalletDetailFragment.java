@@ -57,6 +57,9 @@ public class WalletDetailFragment extends BottomSheetDialogFragment {
         tvName.setText(wallet.getName());
         tvBalance.setText("Balance: " + CurrencyHelper.format(getContext(), wallet.getBalance()));
 
+        ivIcon.setImageResource(getIconResource(wallet.getIcon()));
+        ivIcon.setImageTintList(android.content.res.ColorStateList.valueOf(Color.WHITE));
+
         try {
             ivIcon.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(
@@ -108,6 +111,18 @@ public class WalletDetailFragment extends BottomSheetDialogFragment {
                 });
 
         return view;
+    }
+
+    private int getIconResource(String iconName) {
+        if (iconName == null) return R.drawable.ic_wallet;
+        switch (iconName) {
+            case "ic_wallet": return R.drawable.ic_wallet;
+            case "ic_bank": return R.drawable.ic_bank;
+            case "ic_card": return R.drawable.ic_card;
+            case "ic_savings": return R.drawable.ic_savings;
+            case "ic_other": return R.drawable.ic_other;
+            default: return R.drawable.ic_wallet;
+        }
     }
 
     @Override

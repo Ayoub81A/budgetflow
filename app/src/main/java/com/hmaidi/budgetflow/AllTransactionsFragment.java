@@ -1,5 +1,6 @@
 package com.hmaidi.budgetflow;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -107,9 +108,9 @@ public class AllTransactionsFragment extends Fragment {
 
             // Apply search filter
             boolean matchesSearch = searchQuery.isEmpty() ||
-                    e.getTitle().toLowerCase().contains(searchQuery) ||
-                    e.getCategory().toLowerCase().contains(searchQuery) ||
-                    e.getDate().contains(searchQuery);
+                    (e.getTitle() != null && e.getTitle().toLowerCase().contains(searchQuery)) ||
+                    (e.getCategory() != null && e.getCategory().toLowerCase().contains(searchQuery)) ||
+                    (e.getDate() != null && e.getDate().contains(searchQuery));
 
             if (matchesFilter && matchesSearch) {
                 filtered.add(e);
@@ -136,8 +137,7 @@ public class AllTransactionsFragment extends Fragment {
                 btn.setBackgroundTintList(
                         android.content.res.ColorStateList.valueOf(
                                 ContextCompat.getColor(getContext(), R.color.purple_main)));
-                btn.setTextColor(
-                        ContextCompat.getColor(getContext(), R.color.text_primary));
+                btn.setTextColor(Color.WHITE);
             } else {
                 btn.setBackgroundTintList(
                         android.content.res.ColorStateList.valueOf(

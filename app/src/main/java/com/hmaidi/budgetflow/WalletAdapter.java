@@ -39,6 +39,8 @@ public class WalletAdapter extends RecyclerView.Adapter<WalletAdapter.WalletView
 
         // Set icon based on wallet icon name
         holder.ivIcon.setImageResource(getIconResource(wallet.getIcon()));
+        holder.ivIcon.setImageTintList(android.content.res.ColorStateList.valueOf(Color.WHITE));
+        holder.tvTransactions.setVisibility(View.GONE);
 
         // Set icon background color
         try {

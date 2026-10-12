@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import java.util.concurrent.TimeUnit;
@@ -83,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
                 "recurring_check",
                 androidx.work.ExistingPeriodicWorkPolicy.KEEP,
                 recurringWork);
+
+        // Also perform an immediate check on startup for any due recurring transactions
+        OneTimeWorkRequest instantCheck =
+                new OneTimeWorkRequest.Builder(RecurringWorker.class).build();
+        WorkManager.getInstance(this).enqueue(instantCheck);
     }
 
     private void loadFragment(Fragment fragment) {

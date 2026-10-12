@@ -20,8 +20,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/nav_bg"
-        app:itemIconTint="@color/purple_light"
-        app:itemTextColor="@color/purple_light"
+        app:itemIconTint="@color/nav_item_tint"
+        app:itemTextColor="@color/nav_item_tint"
         app:menu="@menu/bottom_nav_menu"/>
 
     <!-- FAB bottom right -->
@@ -37,7 +37,7 @@
         app:fabSize="normal"
         app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Full"
         app:backgroundTint="@color/purple_main"
-        app:tint="@color/text_primary"
+        app:tint="@android:color/white"
         app:elevation="8dp"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

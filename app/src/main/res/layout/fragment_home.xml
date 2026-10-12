@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg_dark"
     android:padding="16dp"
-    android:paddingBottom="160dp"
+    android:paddingBottom="88dp"
     android:clipToPadding="false">
 
     <LinearLayout
@@ -35,7 +35,8 @@
         <!-- BALANCE CARD -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="180dp"
+            android:layout_height="wrap_content"
+            android:minHeight="170dp"
             android:layout_marginBottom="24dp"
             app:cardCornerRadius="24dp"
             app:cardBackgroundColor="@color/purple_main"
@@ -59,7 +60,7 @@
                 <TextView
                     android:id="@+id/tv_balance"
                     android:text="$4,250.00"
-                    android:textColor="@color/text_primary"
+                    android:textColor="@android:color/white"
                     android:textSize="36sp"
                     android:textStyle="bold"
                     android:layout_width="wrap_content"
@@ -71,6 +72,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:weightSum="2">
 
                     <!-- Income -->
@@ -88,7 +90,7 @@
                             android:backgroundTint="@color/income_green"
                             android:background="@drawable/circle_bg"
                             android:padding="6dp"
-                            android:tint="@color/text_primary"/>
+                            app:tint="@android:color/white"/>
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -106,7 +108,7 @@
                             <TextView
                                 android:id="@+id/tv_income"
                                 android:text="$6,000.00"
-                                android:textColor="@color/text_primary"
+                                android:textColor="@android:color/white"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
                                 android:layout_width="wrap_content"
@@ -117,7 +119,8 @@
                     <!-- Divider -->
                     <View
                         android:layout_width="1dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center_vertical"
                         android:background="#55FFFFFF"/>
 
                     <!-- Expense -->
@@ -135,7 +138,7 @@
                             android:backgroundTint="@color/expense_red"
                             android:background="@drawable/circle_bg"
                             android:padding="6dp"
-                            android:tint="@color/text_primary"/>
+                            app:tint="@android:color/white"/>
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -153,7 +156,7 @@
                             <TextView
                                 android:id="@+id/tv_expense"
                                 android:text="$1,750.00"
-                                android:textColor="@color/text_primary"
+                                android:textColor="@android:color/white"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
                                 android:layout_width="wrap_content"
@@ -163,6 +166,161 @@
 
                 </LinearLayout>
             </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- MONTHLY BUDGET TRACKER CARD -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_budget_tracker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="20dp"
+            app:cardBackgroundColor="@color/card_dark"
+            app:cardElevation="3dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- ACTIVE BUDGET CONTAINER -->
+                <LinearLayout
+                    android:id="@+id/layout_budget_active"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Top Row: Icon + Title + Percent Badge -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_budget"
+                            app:tint="@color/purple_main"
+                            android:layout_marginEnd="8dp"/>
+
+                        <TextView
+                            android:text="Monthly Budget"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"/>
+
+                        <TextView
+                            android:id="@+id/tv_budget_percent"
+                            android:text="0%"
+                            android:textColor="@color/purple_main"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+
+                    </LinearLayout>
+
+                    <!-- Progress Bar -->
+                    <ProgressBar
+                        android:id="@+id/pb_budget"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/budget_progress_bar"
+                        android:layout_marginBottom="10dp"/>
+
+                    <!-- Bottom Info Row: Spent vs Left -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tv_budget_spent_info"
+                            android:text="Spent: $0.00 / $0.00"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"/>
+
+                        <TextView
+                            android:id="@+id/tv_budget_remaining"
+                            android:text="$0.00 left"
+                            android:textColor="@color/income_green"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- EMPTY STATE (NO BUDGET SET YET) -->
+                <LinearLayout
+                    android:id="@+id/layout_budget_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_budget"
+                        android:background="@drawable/circle_bg"
+                        android:backgroundTint="@color/bg_dark"
+                        android:padding="6dp"
+                        app:tint="@color/purple_main"
+                        android:layout_marginEnd="12dp"/>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:text="Set Monthly Budget"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+
+                        <TextView
+                            android:text="Tap to track monthly spending and remaining funds"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="@color/text_secondary"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
         </androidx.cardview.widget.CardView>
 
         <!-- RECENT EXPENSES HEADER -->

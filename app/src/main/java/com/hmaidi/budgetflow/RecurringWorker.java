@@ -59,8 +59,10 @@ public class RecurringWorker extends Worker {
                     template.getRecurringInterval()));
             expenseDao.update(template);
 
-            // Show notification
-            showNotification(template);
+            // Show notification if enabled in settings
+            if (CurrencyHelper.getNotifications(getApplicationContext())) {
+                showNotification(template);
+            }
         }
 
         return Result.success();

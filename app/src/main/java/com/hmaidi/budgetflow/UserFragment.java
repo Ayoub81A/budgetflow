@@ -10,12 +10,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.textfield.TextInputEditText;
@@ -64,12 +66,20 @@ public class UserFragment extends Fragment {
         btnEditName.setOnClickListener(v -> {
             EditText etName = new EditText(getContext());
             etName.setText(CurrencyHelper.getName(getContext()));
-            etName.setTextColor(getContext().getColor(R.color.text_primary));
+            etName.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
             etName.setHint("Enter your name");
+
+            FrameLayout dialogContainer = new FrameLayout(requireContext());
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            int margin = (int) (20 * getResources().getDisplayMetrics().density);
+            params.setMargins(margin, margin / 2, margin, 0);
+            etName.setLayoutParams(params);
+            dialogContainer.addView(etName);
 
             new AlertDialog.Builder(getContext())
                     .setTitle("Edit Name")
-                    .setView(etName)
+                    .setView(dialogContainer)
                     .setPositiveButton("Save", (dialog, which) -> {
                         String name = etName.getText().toString().trim();
                         if (!name.isEmpty()) {
@@ -93,11 +103,19 @@ public class UserFragment extends Fragment {
             double current = CurrencyHelper.getBudget(getContext());
             if (current > 0) etBudget.setText(String.valueOf(current));
             etBudget.setHint("Enter monthly budget");
-            etBudget.setTextColor(getContext().getColor(R.color.text_primary));
+            etBudget.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+
+            FrameLayout dialogContainer = new FrameLayout(requireContext());
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            int margin = (int) (20 * getResources().getDisplayMetrics().density);
+            params.setMargins(margin, margin / 2, margin, 0);
+            etBudget.setLayoutParams(params);
+            dialogContainer.addView(etBudget);
 
             new AlertDialog.Builder(getContext())
                     .setTitle("Monthly Budget Limit")
-                    .setView(etBudget)
+                    .setView(dialogContainer)
                     .setPositiveButton("Save", (dialog, which) -> {
                         String val = etBudget.getText().toString().trim();
                         if (!val.isEmpty()) {
@@ -117,6 +135,9 @@ public class UserFragment extends Fragment {
         // Theme toggle
         switchTheme.setOnCheckedChangeListener((btn, isChecked) -> {
             CurrencyHelper.saveTheme(getContext(), isChecked);
+            if (getActivity() != null) {
+                getActivity().getIntent().putExtra("start_tab", "user");
+            }
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(
                         AppCompatDelegate.MODE_NIGHT_YES);
@@ -211,12 +232,14 @@ public class UserFragment extends Fragment {
                 .setTitle("Select Currency")
                 .setSingleChoiceItems(options, currentIndex, null)
                 .setPositiveButton("Apply", (dialog, which) -> {
-                    android.app.AlertDialog d = (android.app.AlertDialog) dialog;
+                    androidx.appcompat.app.AlertDialog d = (androidx.appcompat.app.AlertDialog) dialog;
                     int selected = d.getListView().getCheckedItemPosition();
-                    CurrencyData.Currency currency = currencies.get(selected);
-                    CurrencyHelper.saveCurrency(
-                            getContext(), currency.code, currency.symbol);
-                    updateCurrencyDisplay(tvDisplay, tvCurrent);
+                    if (selected >= 0 && selected < currencies.size()) {
+                        CurrencyData.Currency currency = currencies.get(selected);
+                        CurrencyHelper.saveCurrency(
+                                getContext(), currency.code, currency.symbol);
+                        updateCurrencyDisplay(tvDisplay, tvCurrent);
+                    }
                 })
                 .setNegativeButton("Cancel", null)
                 .show();

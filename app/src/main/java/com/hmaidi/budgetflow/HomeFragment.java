@@ -1,12 +1,19 @@
 package com.hmaidi.budgetflow;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
+import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -14,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class HomeFragment extends Fragment {
 
@@ -22,6 +30,15 @@ public class HomeFragment extends Fragment {
     ExpenseViewModel viewModel;
     TextView tvBalance, tvIncome, tvExpense;
     LinearLayout emptyState;
+    private double totalIncomeAmount = 0;
+    private double totalExpenseAmount = 0;
+
+    // Budget Tracker Views
+    private CardView cardBudgetTracker;
+    private LinearLayout layoutBudgetActive, layoutBudgetEmpty;
+    private TextView tvBudgetPercent, tvBudgetSpentInfo, tvBudgetRemaining;
+    private ProgressBar pbBudget;
+    private List<ExpenseModel> currentExpensesList = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -33,6 +50,17 @@ public class HomeFragment extends Fragment {
         tvIncome = view.findViewById(R.id.tv_income);
         tvExpense = view.findViewById(R.id.tv_expense);
         emptyState = view.findViewById(R.id.empty_state);
+
+        // Budget Tracker Views
+        cardBudgetTracker = view.findViewById(R.id.card_budget_tracker);
+        layoutBudgetActive = view.findViewById(R.id.layout_budget_active);
+        layoutBudgetEmpty = view.findViewById(R.id.layout_budget_empty);
+        tvBudgetPercent = view.findViewById(R.id.tv_budget_percent);
+        tvBudgetSpentInfo = view.findViewById(R.id.tv_budget_spent_info);
+        tvBudgetRemaining = view.findViewById(R.id.tv_budget_remaining);
+        pbBudget = view.findViewById(R.id.pb_budget);
+
+        cardBudgetTracker.setOnClickListener(v -> showBudgetDialog());
 
         // Dynamic greeting
         TextView tvGreeting = view.findViewById(R.id.tv_greeting);
@@ -74,60 +102,148 @@ public class HomeFragment extends Fragment {
 
         // Observe expenses list
         viewModel.getAllExpenses().observe(getViewLifecycleOwner(), expenses -> {
-            adapter.updateList(expenses);
-            if (expenses == null || expenses.isEmpty()) {
+            currentExpensesList = expenses != null ? expenses : new ArrayList<>();
+            adapter.updateList(currentExpensesList);
+            if (currentExpensesList.isEmpty()) {
                 recyclerView.setVisibility(View.GONE);
                 emptyState.setVisibility(View.VISIBLE);
             } else {
                 recyclerView.setVisibility(View.VISIBLE);
                 emptyState.setVisibility(View.GONE);
             }
+            updateBudgetProgress();
         });
 
         // Observe total expenses
         viewModel.getTotalExpenses().observe(getViewLifecycleOwner(), total -> {
-            double amount = total != null ? total : 0;
-            tvExpense.setText(CurrencyHelper.format(getContext(), amount));
+            totalExpenseAmount = total != null ? total : 0;
+            tvExpense.setText(CurrencyHelper.format(getContext(), totalExpenseAmount));
             updateBalance();
-
-            // Budget warning
-            double budget = CurrencyHelper.getBudget(getContext());
-            if (budget > 0 && amount > budget) {
-                tvExpense.setTextColor(
-                        ContextCompat.getColor(getContext(), R.color.expense_red));
-                Toast.makeText(getContext(),
-                        "⚠️ You exceeded your monthly budget!",
-                        Toast.LENGTH_LONG).show();
-            } else {
-                tvExpense.setTextColor(
-                        ContextCompat.getColor(getContext(), R.color.text_primary));
-            }
+            updateBudgetProgress();
         });
 
         // Observe total income
         viewModel.getTotalIncome().observe(getViewLifecycleOwner(), total -> {
-            double amount = total != null ? total : 0;
-            tvIncome.setText(CurrencyHelper.format(getContext(), amount));
+            totalIncomeAmount = total != null ? total : 0;
+            tvIncome.setText(CurrencyHelper.format(getContext(), totalIncomeAmount));
             updateBalance();
         });
 
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateBudgetProgress();
+    }
+
     private void updateBalance() {
-        try {
-            String incomeStr = tvIncome.getText().toString()
-                    .replaceAll("[^\\d.]", "");
-            String expenseStr = tvExpense.getText().toString()
-                    .replaceAll("[^\\d.]", "");
+        double balance = totalIncomeAmount - totalExpenseAmount;
+        tvBalance.setText(CurrencyHelper.format(getContext(), balance));
+    }
 
-            double income = incomeStr.isEmpty() ? 0 : Double.parseDouble(incomeStr);
-            double expense = expenseStr.isEmpty() ? 0 : Double.parseDouble(expenseStr);
-
-            double balance = income - expense;
-            tvBalance.setText(CurrencyHelper.format(getContext(), balance));
-        } catch (NumberFormatException e) {
-            tvBalance.setText(CurrencyHelper.format(getContext(), 0));
+    private void updateBudgetProgress() {
+        if (getContext() == null || pbBudget == null) return;
+        double budget = CurrencyHelper.getBudget(getContext());
+        if (budget <= 0) {
+            layoutBudgetActive.setVisibility(View.GONE);
+            layoutBudgetEmpty.setVisibility(View.VISIBLE);
+            return;
         }
+
+        layoutBudgetActive.setVisibility(View.VISIBLE);
+        layoutBudgetEmpty.setVisibility(View.GONE);
+
+        double thisMonthSpent = calculateThisMonthExpenses(currentExpensesList);
+        double remaining = budget - thisMonthSpent;
+        int percent = (int) Math.round((thisMonthSpent / budget) * 100);
+
+        tvBudgetPercent.setText(percent + "%");
+        tvBudgetSpentInfo.setText(String.format("Spent: %s / %s",
+                CurrencyHelper.format(getContext(), thisMonthSpent),
+                CurrencyHelper.format(getContext(), budget)));
+
+        if (remaining >= 0) {
+            tvBudgetRemaining.setText(CurrencyHelper.format(getContext(), remaining) + " left");
+            tvBudgetRemaining.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_green));
+        } else {
+            tvBudgetRemaining.setText("Exceeded by " + CurrencyHelper.format(getContext(), Math.abs(remaining)));
+            tvBudgetRemaining.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_red));
+        }
+
+        pbBudget.setProgress(Math.min(100, Math.max(0, percent)));
+
+        int progressColor;
+        if (percent >= 100) {
+            progressColor = ContextCompat.getColor(requireContext(), R.color.expense_red);
+            tvBudgetPercent.setTextColor(progressColor);
+        } else if (percent >= 75) {
+            progressColor = Color.parseColor("#FFA000"); // Amber warning
+            tvBudgetPercent.setTextColor(progressColor);
+        } else {
+            progressColor = ContextCompat.getColor(requireContext(), R.color.purple_main);
+            tvBudgetPercent.setTextColor(progressColor);
+        }
+        pbBudget.setProgressTintList(ColorStateList.valueOf(progressColor));
+    }
+
+    private double calculateThisMonthExpenses(List<ExpenseModel> expenses) {
+        if (expenses == null) return 0;
+        Calendar now = Calendar.getInstance();
+        int currentMonth = now.get(Calendar.MONTH) + 1;
+        int currentYear = now.get(Calendar.YEAR);
+
+        double sum = 0;
+        for (ExpenseModel e : expenses) {
+            if (e.isExpense() && isDateInMonth(e.getDate(), currentMonth, currentYear)) {
+                sum += e.getAmount();
+            }
+        }
+        return sum;
+    }
+
+    private boolean isDateInMonth(String dateStr, int targetMonth, int targetYear) {
+        if (dateStr == null) return false;
+        String[] parts = dateStr.trim().split("/");
+        if (parts.length == 3) {
+            try {
+                int m = Integer.parseInt(parts[1]);
+                int y = Integer.parseInt(parts[2]);
+                return m == targetMonth && y == targetYear;
+            } catch (NumberFormatException ignored) {}
+        }
+        return false;
+    }
+
+    private void showBudgetDialog() {
+        EditText etBudget = new EditText(getContext());
+        etBudget.setInputType(android.text.InputType.TYPE_CLASS_NUMBER |
+                android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        double current = CurrencyHelper.getBudget(getContext());
+        if (current > 0) etBudget.setText(String.valueOf(current));
+        etBudget.setHint("Enter monthly budget");
+        etBudget.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+
+        FrameLayout dialogContainer = new FrameLayout(requireContext());
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        int margin = (int) (20 * getResources().getDisplayMetrics().density);
+        params.setMargins(margin, margin / 2, margin, 0);
+        etBudget.setLayoutParams(params);
+        dialogContainer.addView(etBudget);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Monthly Budget Limit")
+                .setView(dialogContainer)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String val = etBudget.getText().toString().trim();
+                    if (!val.isEmpty()) {
+                        CurrencyHelper.saveBudget(getContext(), Double.parseDouble(val));
+                        updateBudgetProgress();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

@@ -115,13 +115,35 @@ public class AddWalletFragment extends BottomSheetDialogFragment {
             View colorView = root.findViewById(id);
             colorView.setScaleX(1f);
             colorView.setScaleY(1f);
-            colorView.setAlpha(0.5f);
+            colorView.setAlpha(0.45f);
         }
         // Highlight selected
-        selected.setScaleX(1f);
-        selected.setScaleY(1f);
+        selected.setScaleX(1.2f);
+        selected.setScaleY(1.2f);
         selected.setAlpha(1f);
         selectedColor = colorValue;
+
+        // Update currently selected icon background immediately
+        int selectedIconLayoutId = getIconLayoutId(selectedIcon);
+        if (selectedIconLayoutId != 0) {
+            LinearLayout layout = root.findViewById(selectedIconLayoutId);
+            if (layout != null) {
+                ImageView icon = (ImageView) layout.getChildAt(0);
+                icon.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(selectedColor)));
+            }
+        }
+    }
+
+    private int getIconLayoutId(String iconName) {
+        if (iconName == null) return R.id.icon_wallet;
+        switch (iconName) {
+            case "ic_wallet": return R.id.icon_wallet;
+            case "ic_bank": return R.id.icon_bank;
+            case "ic_card": return R.id.icon_card;
+            case "ic_savings": return R.id.icon_savings;
+            case "ic_other": return R.id.icon_other;
+            default: return R.id.icon_wallet;
+        }
     }
 
     @Override

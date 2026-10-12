@@ -2,6 +2,7 @@ package com.hmaidi.budgetflow;
 
 import android.app.DatePickerDialog;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,6 +37,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         TextInputEditText etTitle = view.findViewById(R.id.et_title);
         TextInputEditText etAmount = view.findViewById(R.id.et_amount);
         TextInputEditText etDate = view.findViewById(R.id.et_date);
+        TextInputEditText etSource = view.findViewById(R.id.et_source);
         Button btnExpense = view.findViewById(R.id.btn_expense);
         Button btnIncome = view.findViewById(R.id.btn_income);
         TextInputLayout layoutSource = view.findViewById(R.id.layout_source);
@@ -85,9 +87,8 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             layoutSource.setVisibility(View.GONE);
             btnExpense.setBackgroundTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(getContext(), R.color.expense_red)));
-            btnExpense.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
-            btnIncome.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(getContext(), R.color.card_dark)));
+            btnExpense.setTextColor(Color.WHITE);
+            btnIncome.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             btnIncome.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
         });
 
@@ -97,9 +98,8 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             layoutSource.setVisibility(View.VISIBLE);
             btnIncome.setBackgroundTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(getContext(), R.color.income_green)));
-            btnIncome.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
-            btnExpense.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(getContext(), R.color.card_dark)));
+            btnIncome.setTextColor(Color.WHITE);
+            btnExpense.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             btnExpense.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
         });
 
@@ -179,11 +179,17 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
                 return;
             }
 
+            String cat = selectedCategory;
+            if (!isExpense) {
+                String sourceText = etSource.getText() != null ? etSource.getText().toString().trim() : "";
+                cat = sourceText.isEmpty() ? "Income" : sourceText;
+            }
+
             ExpenseModel expense = new ExpenseModel(
                     title,
                     date,
                     Double.parseDouble(amount),
-                    selectedCategory,
+                    cat,
                     isExpense,
                     selectedWalletId
             );
@@ -221,8 +227,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         TextView label = (TextView) selected.getChildAt(1);
         icon.setBackgroundTintList(ColorStateList.valueOf(
                 ContextCompat.getColor(getContext(), R.color.purple_main)));
-        icon.setImageTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(getContext(), R.color.text_primary)));
+        icon.setImageTintList(ColorStateList.valueOf(Color.WHITE));
         label.setTextColor(ContextCompat.getColor(getContext(), R.color.purple_light));
         selectedCategory = name;
     }
@@ -243,7 +248,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         }
         selected.setBackgroundTintList(ColorStateList.valueOf(
                 ContextCompat.getColor(getContext(), R.color.purple_main)));
-        selected.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
+        selected.setTextColor(Color.WHITE);
     }
 
     private long getFirstDueDate(String interval) {

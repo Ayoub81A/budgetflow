@@ -70,4 +70,8 @@ public class ExpenseRepository {
     public LiveData<Double> getExpensesByWalletTotal(int walletId) {
         return expenseDao.getExpensesByWalletTotal(walletId);
     }
+
+    public LiveData<List<ExpenseModel>> getAllRecurringExpenses() {
+        return expenseDao.getAllRecurringExpenses();
+    }
 }
