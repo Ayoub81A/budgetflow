@@ -86,10 +86,11 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             categoryContainer.setVisibility(View.VISIBLE);
             layoutSource.setVisibility(View.GONE);
             btnExpense.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(getContext(), R.color.expense_red)));
+                    ContextCompat.getColor(requireContext(), R.color.expense_red)));
             btnExpense.setTextColor(Color.WHITE);
-            btnIncome.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
-            btnIncome.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+            btnIncome.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.bg_dark)));
+            btnIncome.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         });
 
         btnIncome.setOnClickListener(v -> {
@@ -97,10 +98,11 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             categoryContainer.setVisibility(View.GONE);
             layoutSource.setVisibility(View.VISIBLE);
             btnIncome.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(getContext(), R.color.income_green)));
+                    ContextCompat.getColor(requireContext(), R.color.income_green)));
             btnIncome.setTextColor(Color.WHITE);
-            btnExpense.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
-            btnExpense.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+            btnExpense.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.bg_dark)));
+            btnExpense.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         });
 
         // Category selection
@@ -217,18 +219,18 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             ImageView icon = (ImageView) cat.getChildAt(0);
             TextView label = (TextView) cat.getChildAt(1);
             icon.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(getContext(), R.color.card_dark)));
+                    ContextCompat.getColor(requireContext(), R.color.bg_dark)));
             icon.setImageTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(getContext(), R.color.text_secondary)));
-            label.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+                    ContextCompat.getColor(requireContext(), R.color.text_secondary)));
+            label.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         }
 
         ImageView icon = (ImageView) selected.getChildAt(0);
         TextView label = (TextView) selected.getChildAt(1);
         icon.setBackgroundTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(getContext(), R.color.purple_main)));
+                ContextCompat.getColor(requireContext(), R.color.purple_main)));
         icon.setImageTintList(ColorStateList.valueOf(Color.WHITE));
-        label.setTextColor(ContextCompat.getColor(getContext(), R.color.purple_light));
+        label.setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_light));
         selectedCategory = name;
     }
 
@@ -243,11 +245,11 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         for (int id : ids) {
             Button btn = root.findViewById(id);
             btn.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(getContext(), R.color.card_dark)));
-            btn.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
+                    ContextCompat.getColor(requireContext(), R.color.bg_dark)));
+            btn.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         }
         selected.setBackgroundTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(getContext(), R.color.purple_main)));
+                ContextCompat.getColor(requireContext(), R.color.purple_main)));
         selected.setTextColor(Color.WHITE);
     }
 

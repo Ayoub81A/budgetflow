@@ -50,6 +50,8 @@ public class StatsFragment extends Fragment {
         btnRangeYear.setOnClickListener(v -> selectRange("year"));
         btnRangeAll.setOnClickListener(v -> selectRange("all"));
 
+        applyTimeRangeFilter();
+
         viewModel = new ViewModelProvider(requireActivity())
                 .get(ExpenseViewModel.class);
 

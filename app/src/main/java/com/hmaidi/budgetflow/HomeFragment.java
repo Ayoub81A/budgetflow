@@ -51,6 +51,10 @@ public class HomeFragment extends Fragment {
         tvExpense = view.findViewById(R.id.tv_expense);
         emptyState = view.findViewById(R.id.empty_state);
 
+        tvBalance.setText(CurrencyHelper.format(getContext(), 0));
+        tvIncome.setText(CurrencyHelper.format(getContext(), 0));
+        tvExpense.setText(CurrencyHelper.format(getContext(), 0));
+
         // Budget Tracker Views
         cardBudgetTracker = view.findViewById(R.id.card_budget_tracker);
         layoutBudgetActive = view.findViewById(R.id.layout_budget_active);

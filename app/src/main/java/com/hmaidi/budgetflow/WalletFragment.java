@@ -66,7 +66,7 @@ public class WalletFragment extends Fragment {
             if (wallets == null || wallets.isEmpty()) {
                 recyclerView.setVisibility(View.GONE);
                 emptyState.setVisibility(View.VISIBLE);
-                tvTotalBalance.setText("$0.00");
+                tvTotalBalance.setText(CurrencyHelper.format(getContext(), 0));
             } else {
                 recyclerView.setVisibility(View.VISIBLE);
                 emptyState.setVisibility(View.GONE);

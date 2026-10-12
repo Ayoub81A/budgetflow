@@ -73,7 +73,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_wallet"
                 android:background="@drawable/circle_bg"
-                android:backgroundTint="@color/card_dark"
+                android:backgroundTint="@color/bg_dark"
                 android:padding="8dp"
                 android:tint="@color/text_secondary"/>
             <TextView
@@ -98,7 +98,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_bank"
                 android:background="@drawable/circle_bg"
-                android:backgroundTint="@color/card_dark"
+                android:backgroundTint="@color/bg_dark"
                 android:padding="8dp"
                 android:tint="@color/text_secondary"/>
             <TextView
@@ -123,7 +123,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_card"
                 android:background="@drawable/circle_bg"
-                android:backgroundTint="@color/card_dark"
+                android:backgroundTint="@color/bg_dark"
                 android:padding="8dp"
                 android:tint="@color/text_secondary"/>
             <TextView
@@ -148,7 +148,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_savings"
                 android:background="@drawable/circle_bg"
-                android:backgroundTint="@color/card_dark"
+                android:backgroundTint="@color/bg_dark"
                 android:padding="8dp"
                 android:tint="@color/text_secondary"/>
             <TextView
@@ -173,7 +173,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_other"
                 android:background="@drawable/circle_bg"
-                android:backgroundTint="@color/card_dark"
+                android:backgroundTint="@color/bg_dark"
                 android:padding="8dp"
                 android:tint="@color/text_secondary"/>
             <TextView

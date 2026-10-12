@@ -92,7 +92,7 @@ public class AddWalletFragment extends BottomSheetDialogFragment {
             ImageView icon = (ImageView) layout.getChildAt(0);
             TextView label = (TextView) layout.getChildAt(1);
             icon.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(getContext(), R.color.card_dark)));
+                    ContextCompat.getColor(getContext(), R.color.bg_dark)));
             icon.setImageTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(getContext(), R.color.text_secondary)));
             label.setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
