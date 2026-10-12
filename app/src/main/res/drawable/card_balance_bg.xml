@@ -4,7 +4,10 @@
     <corners android:radius="24dp" />
     <gradient
         android:angle="135"
-        android:startColor="#4F46E5"
-        android:endColor="#7C3AED"
+        android:startColor="@color/balance_card_start"
+        android:endColor="@color/balance_card_end"
         android:type="linear" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/balance_card_stroke" />
 </shape>

@@ -1,25 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Background & Surfaces (Midnight Obsidian & Midnight Slate) -->
-    <color name="bg_dark">#0B0F19</color>
-    <color name="card_dark">#161F30</color>
-    <color name="nav_bg">#0E1422</color>
+    <!-- Option A Dark Mode: Graphite & Muted Sage -->
+    <color name="bg_dark">#121417</color>
+    <color name="card_dark">#1B1E23</color>
+    <color name="nav_bg">#16191D</color>
 
-    <!-- Brand / Primary Accents (Electric Indigo) -->
-    <color name="purple_main">#6366F1</color>
-    <color name="purple_light">#818CF8</color>
+    <!-- Primary & Secondary Accents (Muted Sage / Mint) -->
+    <color name="purple_main">#10B981</color>
+    <color name="purple_light">#34D399</color>
 
     <!-- Financial Status Indicators -->
-    <color name="income_green">#10B981</color>
-    <color name="expense_red">#F43F5E</color>
+    <color name="income_green">#34D399</color>
+    <color name="expense_red">#F87171</color>
 
     <!-- Typography -->
-    <color name="text_primary">#F8FAFC</color>
-    <color name="text_secondary">#94A3B8</color>
+    <color name="text_primary">#F3F4F6</color>
+    <color name="text_secondary">#9CA3AF</color>
 
     <!-- Subtle Accents, Handles & Inputs -->
-    <color name="handle_bar">#334155</color>
-    <color name="border_subtle">#1E293B</color>
-    <color name="input_bg">#0F172A</color>
-    <color name="circle_placeholder">#1E293B</color>
+    <color name="handle_bar">#374151</color>
+    <color name="border_subtle">#262A30</color>
+    <color name="input_bg">#262A30</color>
+    <color name="circle_placeholder">#262A30</color>
+
+    <!-- Balance Card Colors (Dark Forest-Graphite) -->
+    <color name="balance_card_start">#1E2925</color>
+    <color name="balance_card_end">#161F1C</color>
+    <color name="balance_card_stroke">#2A3832</color>
+    <color name="balance_card_text">#F3F4F6</color>
+    <color name="balance_card_subtext">#B3F3F4F6</color>
+    <color name="balance_card_divider">#26FFFFFF</color>
 </resources>

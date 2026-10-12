@@ -108,7 +108,14 @@
                 <com.github.mikephil.charting.charts.PieChart
                     android:id="@+id/pie_chart"
                     android:layout_width="match_parent"
-                    android:layout_height="280dp"/>
+                    android:layout_height="250dp"/>
+
+                <LinearLayout
+                    android:id="@+id/layout_chart_legend"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="12dp"/>
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>

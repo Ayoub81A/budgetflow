@@ -53,24 +53,12 @@ public class CategoryEditorHelper {
         if (isEdit) etName.setText(existingCategory.getName());
         layout.addView(etName);
 
-        // Type: Expense or Income
-        final boolean[] isExpense = {isEdit ? existingCategory.isExpense() : true};
-        TextView tvType = new TextView(context);
-        tvType.setText("Type: " + (isExpense[0] ? "Expense" : "Income") + " (tap to toggle)");
-        tvType.setTextColor(ContextCompat.getColor(context, R.color.purple_light));
-        tvType.setTextSize(13);
-        tvType.setPadding(0, (int) (8 * density), 0, (int) (8 * density));
-        tvType.setOnClickListener(v -> {
-            isExpense[0] = !isExpense[0];
-            tvType.setText("Type: " + (isExpense[0] ? "Expense" : "Income") + " (tap to toggle)");
-        });
-        layout.addView(tvType);
-
         // Icon Label
         TextView tvIconLabel = new TextView(context);
         tvIconLabel.setText("Select Icon:");
         tvIconLabel.setTextColor(ContextCompat.getColor(context, R.color.text_secondary));
         tvIconLabel.setTextSize(12);
+        tvIconLabel.setPadding(0, (int) (8 * density), 0, 0);
         layout.addView(tvIconLabel);
 
         // Icon horizontal picker
@@ -200,12 +188,12 @@ public class CategoryEditorHelper {
                         existingCategory.setName(name);
                         existingCategory.setIcon(selectedIcon[0]);
                         existingCategory.setColor(selectedColor[0]);
-                        existingCategory.setExpense(isExpense[0]);
+                        existingCategory.setExpense(true);
                         viewModel.updateCategoryAndRenameExpenses(existingCategory, oldName);
                         Toast.makeText(context, "Category updated!", Toast.LENGTH_SHORT).show();
                         if (listener != null) listener.onSaved(existingCategory);
                     } else {
-                        CategoryModel newCat = new CategoryModel(name, selectedIcon[0], selectedColor[0], isExpense[0]);
+                        CategoryModel newCat = new CategoryModel(name, selectedIcon[0], selectedColor[0], true);
                         viewModel.insert(newCat);
                         Toast.makeText(context, "Category created!", Toast.LENGTH_SHORT).show();
                         if (listener != null) listener.onSaved(newCat);

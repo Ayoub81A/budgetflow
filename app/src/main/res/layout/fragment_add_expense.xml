@@ -59,7 +59,7 @@
                 android:layout_weight="1"
                 android:text="Income"
                 android:textColor="@color/text_secondary"
-                android:backgroundTint="@color/bg_dark"
+                android:backgroundTint="@color/input_bg"
                 app:cornerRadius="10dp"
                 style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
 

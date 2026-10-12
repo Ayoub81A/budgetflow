@@ -522,19 +522,19 @@ public class UserFragment extends Fragment {
         androidx.lifecycle.Observer<List<CategoryModel>> observer = new androidx.lifecycle.Observer<List<CategoryModel>>() {
             @Override
             public void onChanged(List<CategoryModel> categories) {
-                categoryViewModel.getAllCategories().removeObserver(this);
+                categoryViewModel.getExpenseCategories().removeObserver(this);
                 if (getContext() == null || categories == null) return;
                 showCategoriesListDialog(categoryViewModel, categories);
             }
         };
-        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), observer);
+        categoryViewModel.getExpenseCategories().observe(getViewLifecycleOwner(), observer);
     }
 
     private void showCategoriesListDialog(CategoryViewModel categoryViewModel, List<CategoryModel> categories) {
         String[] catNames = new String[categories.size()];
         for (int i = 0; i < categories.size(); i++) {
             CategoryModel c = categories.get(i);
-            catNames[i] = c.getName() + " (" + (c.isExpense() ? "Expense" : "Income") + ")";
+            catNames[i] = c.getName();
         }
 
         new AlertDialog.Builder(requireContext())

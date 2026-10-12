@@ -88,7 +88,8 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             btnExpense.setBackgroundTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(requireContext(), R.color.expense_red)));
             btnExpense.setTextColor(Color.WHITE);
-            btnIncome.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
+            btnIncome.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.input_bg)));
             btnIncome.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         });
 
@@ -99,7 +100,8 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             btnIncome.setBackgroundTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(requireContext(), R.color.income_green)));
             btnIncome.setTextColor(Color.WHITE);
-            btnExpense.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
+            btnExpense.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.input_bg)));
             btnExpense.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         });
 

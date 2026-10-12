@@ -32,6 +32,9 @@ public interface CategoryDao {
     @Insert
     void insertAll(List<CategoryModel> categories);
 
+    @Query("DELETE FROM categories WHERE isExpense = 0")
+    void deleteIncomeCategories();
+
     @Query("DELETE FROM categories")
     void deleteAll();
 }
