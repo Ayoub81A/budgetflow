@@ -45,4 +45,13 @@ public interface ExpenseDao {
 
     @Delete
     void delete(ExpenseModel expense);
+
+    @Query("SELECT * FROM expenses ORDER BY id ASC")
+    List<ExpenseModel> getAllExpensesSync();
+
+    @Insert
+    void insertAll(List<ExpenseModel> expenses);
+
+    @Query("DELETE FROM expenses")
+    void deleteAll();
 }

@@ -43,6 +43,15 @@ A modern, offline-first personal finance and expense tracking Android applicatio
 - **Theme-Aware Charts**: Automatically adapts slice styling, text colors, and backgrounds between Light and Dark themes.
 - **Dynamic Period Totals**: Displays period-specific Income, Expenses, and Net Savings (`Income - Expenses`).
 
+### 💾 Data Export & Backup (CSV / JSON)
+- **CSV Export**: Export all transactions to a cleanly formatted `.csv` file with Excel-compatible UTF-8 BOM, ready for Google Sheets or Microsoft Excel.
+- **JSON Full Backup**: Back up complete database states including wallets, balances, and recurring transaction schedules into portable `.json` files.
+- **Smart Data Import**:
+  - Automatically identifies whether an imported file is CSV or JSON.
+  - **Merge Mode**: Adds imported transactions and wallets to existing data without losing anything.
+  - **Replace Mode**: Cleanly restores the database to match the backup file.
+- **Modern Storage Access Framework (SAF)**: Uses native Android file pickers with zero unnecessary storage permissions required.
+
 ### ⚙️ Personalization & Settings
 - **Dark Mode**: Complete system-wide Dark Theme support with high-contrast surfaces and persistent state.
 - **Multi-Currency Support**: Switch between USD (`$`), EUR (`€`), GBP (`£`), TND (`DT`), CAD (`$`), JPY (`¥`), and more.

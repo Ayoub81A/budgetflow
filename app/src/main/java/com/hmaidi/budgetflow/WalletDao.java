@@ -28,4 +28,13 @@ public interface WalletDao {
 
     @Query("SELECT * FROM wallets WHERE id = :walletId")
     Wallet getWalletByIdSync(int walletId);
+
+    @Query("SELECT * FROM wallets ORDER BY id ASC")
+    List<Wallet> getAllWalletsSync();
+
+    @Insert
+    void insertAll(List<Wallet> wallets);
+
+    @Query("DELETE FROM wallets")
+    void deleteAll();
 }

@@ -14,20 +14,70 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import android.widget.Toast;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.Executors;
 
 public class UserFragment extends Fragment {
 
     private static final int PICK_IMAGE = 1001;
     ImageView ivProfile;
+
+    private ActivityResultLauncher<Intent> exportCsvLauncher;
+    private ActivityResultLauncher<Intent> exportJsonLauncher;
+    private ActivityResultLauncher<Intent> importFileLauncher;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        exportCsvLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            performExport(uri, true);
+                        }
+                    }
+                });
+
+        exportJsonLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            performExport(uri, false);
+                        }
+                    }
+                });
+
+        importFileLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            performImport(uri);
+                        }
+                    }
+                });
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -44,6 +94,8 @@ public class UserFragment extends Fragment {
         Button btnEditName = view.findViewById(R.id.btn_edit_name);
         LinearLayout rowCurrency = view.findViewById(R.id.row_currency);
         LinearLayout rowBudget = view.findViewById(R.id.row_budget);
+        LinearLayout rowExportData = view.findViewById(R.id.row_export_data);
+        LinearLayout rowImportData = view.findViewById(R.id.row_import_data);
         LinearLayout rowClearData = view.findViewById(R.id.row_clear_data);
         SwitchCompat switchNotifications = view.findViewById(R.id.switch_notifications);
         SwitchCompat switchTheme = view.findViewById(R.id.switch_theme);
@@ -147,40 +199,195 @@ public class UserFragment extends Fragment {
             }
         });
 
+        // Export Data
+        rowExportData.setOnClickListener(v -> showExportDialog());
+
+        // Import Data
+        rowImportData.setOnClickListener(v -> startImportPicker());
+
         // Clear all data
         rowClearData.setOnClickListener(v -> {
             new AlertDialog.Builder(getContext())
                     .setTitle("Clear All Data")
                     .setMessage("This will permanently delete all transactions and wallets. This cannot be undone!")
                     .setPositiveButton("Clear Everything", (dialog, which) -> {
-                        ExpenseViewModel expenseViewModel = new ViewModelProvider(
-                                requireActivity()).get(ExpenseViewModel.class);
-                        WalletViewModel walletViewModel = new ViewModelProvider(
-                                requireActivity()).get(WalletViewModel.class);
+                        Executors.newSingleThreadExecutor().execute(() -> {
+                            AppDatabase db = AppDatabase.getInstance(requireContext());
+                            db.expenseDao().deleteAll();
+                            db.walletDao().deleteAll();
+                            Wallet defaultW = new Wallet("Main Wallet", "ic_wallet", "#7B5EA7");
+                            db.walletDao().insert(defaultW);
 
-                        // Delete all expenses and wallets
-                        expenseViewModel.getAllExpenses().observe(
-                                getViewLifecycleOwner(), expenses -> {
-                                    if (expenses != null) {
-                                        for (ExpenseModel e : expenses) {
-                                            expenseViewModel.delete(e);
-                                        }
-                                    }
-                                });
-                        walletViewModel.getAllWallets().observe(
-                                getViewLifecycleOwner(), wallets -> {
-                                    if (wallets != null) {
-                                        for (Wallet w : wallets) {
-                                            walletViewModel.delete(w);
-                                        }
-                                    }
-                                });
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() ->
+                                        Toast.makeText(getContext(), "All data cleared", Toast.LENGTH_SHORT).show());
+                            }
+                        });
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
         });
 
         return view;
+    }
+
+    private void showExportDialog() {
+        String[] options = {"CSV (Excel / Spreadsheets)", "JSON (Full Backup)"};
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Export Data")
+                .setItems(options, (dialog, which) -> {
+                    String dateStamp = new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date());
+                    if (which == 0) {
+                        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                        intent.addCategory(Intent.CATEGORY_OPENABLE);
+                        intent.setType("text/csv");
+                        intent.putExtra(Intent.EXTRA_TITLE, "budgetflow_export_" + dateStamp + ".csv");
+                        exportCsvLauncher.launch(intent);
+                    } else {
+                        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                        intent.addCategory(Intent.CATEGORY_OPENABLE);
+                        intent.setType("application/json");
+                        intent.putExtra(Intent.EXTRA_TITLE, "budgetflow_backup_" + dateStamp + ".json");
+                        exportJsonLauncher.launch(intent);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void performExport(Uri uri, boolean isCsv) {
+        if (getContext() == null) return;
+        Toast.makeText(getContext(), "Exporting data...", Toast.LENGTH_SHORT).show();
+        DataExportImportHelper.exportAllData(getContext(), isCsv, new DataExportImportHelper.Callback<String>() {
+            @Override
+            public void onSuccess(String content) {
+                if (getContext() == null) return;
+                DataExportImportHelper.writeToUri(getContext(), uri, content, new DataExportImportHelper.Callback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "Exported successfully!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void startImportPicker() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        String[] mimeTypes = {"text/csv", "text/comma-separated-values", "application/json", "text/plain", "application/octet-stream"};
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        importFileLauncher.launch(intent);
+    }
+
+    private void performImport(Uri uri) {
+        if (getContext() == null) return;
+        Toast.makeText(getContext(), "Reading file...", Toast.LENGTH_SHORT).show();
+        DataExportImportHelper.readFromUri(getContext(), uri, new DataExportImportHelper.Callback<String>() {
+            @Override
+            public void onSuccess(String content) {
+                if (getContext() == null || content == null || content.trim().isEmpty()) {
+                    Toast.makeText(getContext(), "Selected file is empty", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String trimmed = content.trim();
+                boolean isJson = trimmed.startsWith("{");
+
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    try {
+                        AppDatabase db = AppDatabase.getInstance(getContext());
+                        List<Wallet> existingWallets = db.walletDao().getAllWalletsSync();
+
+                        DataExportImportHelper.BackupData data;
+                        if (isJson) {
+                            data = DataExportImportHelper.parseJson(trimmed);
+                        } else {
+                            data = DataExportImportHelper.parseCsv(trimmed, existingWallets);
+                        }
+
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> showImportConfirmDialog(data));
+                        }
+                    } catch (Exception e) {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() ->
+                                    Toast.makeText(getContext(), "Failed to parse file: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Failed to read file: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void showImportConfirmDialog(DataExportImportHelper.BackupData data) {
+        if (getContext() == null) return;
+        int expenseCount = data.expenses != null ? data.expenses.size() : 0;
+        int walletCount = data.wallets != null ? data.wallets.size() : 0;
+
+        String msg = "Found " + expenseCount + " transaction(s) and " + walletCount + " wallet(s).\n\n"
+                + "Choose how to import:\n"
+                + "• Merge: Keep current data and add these transactions.\n"
+                + "• Replace: Clear current data and restore this backup.";
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Confirm Import")
+                .setMessage(msg)
+                .setPositiveButton("Merge", (dialog, which) -> executeImport(data, false))
+                .setNeutralButton("Replace", (dialog, which) -> {
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle("Warning")
+                            .setMessage("Replacing data will delete all existing transactions and wallets. Continue?")
+                            .setPositiveButton("Yes, Replace", (d2, w2) -> executeImport(data, true))
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void executeImport(DataExportImportHelper.BackupData data, boolean replaceExisting) {
+        if (getContext() == null) return;
+        Toast.makeText(getContext(), "Importing data...", Toast.LENGTH_SHORT).show();
+        DataExportImportHelper.importBackupData(getContext(), data, replaceExisting, new DataExportImportHelper.Callback<Integer>() {
+            @Override
+            public void onSuccess(Integer count) {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Successfully imported " + count + " transactions!", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
     }
 
     @Override
