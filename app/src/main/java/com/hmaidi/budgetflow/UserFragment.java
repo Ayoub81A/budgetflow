@@ -96,9 +96,25 @@ public class UserFragment extends Fragment {
         LinearLayout rowBudget = view.findViewById(R.id.row_budget);
         LinearLayout rowExportData = view.findViewById(R.id.row_export_data);
         LinearLayout rowImportData = view.findViewById(R.id.row_import_data);
+        LinearLayout rowManageCategories = view.findViewById(R.id.row_manage_categories);
+        LinearLayout rowTrashBin = view.findViewById(R.id.row_trash_bin);
+        TextView tvTrashCount = view.findViewById(R.id.tv_trash_count);
         LinearLayout rowClearData = view.findViewById(R.id.row_clear_data);
         SwitchCompat switchNotifications = view.findViewById(R.id.switch_notifications);
         SwitchCompat switchTheme = view.findViewById(R.id.switch_theme);
+
+        ExpenseViewModel expenseViewModel = new ViewModelProvider(requireActivity())
+                .get(ExpenseViewModel.class);
+        expenseViewModel.getTrashedExpenses().observe(getViewLifecycleOwner(), trashed -> {
+            if (trashed == null || trashed.isEmpty()) {
+                tvTrashCount.setText("Empty");
+            } else {
+                tvTrashCount.setText(trashed.size() + (trashed.size() == 1 ? " item" : " items"));
+            }
+        });
+
+        rowTrashBin.setOnClickListener(v -> showTrashDialog());
+        rowManageCategories.setOnClickListener(v -> showCategoriesDialog());
 
         // Load saved values
         tvProfileName.setText(CurrencyHelper.getName(getContext()));
@@ -446,6 +462,116 @@ public class UserFragment extends Fragment {
                         CurrencyHelper.saveCurrency(
                                 getContext(), currency.code, currency.symbol);
                         updateCurrencyDisplay(tvDisplay, tvCurrent);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showTrashDialog() {
+        ExpenseViewModel expenseViewModel = new ViewModelProvider(requireActivity()).get(ExpenseViewModel.class);
+        List<ExpenseModel> trashedList = expenseViewModel.getTrashedExpenses().getValue();
+        if (trashedList == null || trashedList.isEmpty()) {
+            Toast.makeText(getContext(), "Recycle Bin is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String[] itemTitles = new String[trashedList.size()];
+        for (int i = 0; i < trashedList.size(); i++) {
+            ExpenseModel e = trashedList.get(i);
+            String sign = e.isExpense() ? "-" : "+";
+            itemTitles[i] = e.getTitle() + " (" + sign + CurrencyHelper.format(getContext(), e.getAmount()) + ")\n" + e.getDate() + " • " + e.getCategory();
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Recycle Bin (" + trashedList.size() + " items)")
+                .setItems(itemTitles, (dialog, which) -> {
+                    ExpenseModel selected = trashedList.get(which);
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle(selected.getTitle())
+                            .setMessage("Amount: " + CurrencyHelper.formatSigned(getContext(), selected.getAmount(), selected.isExpense()) + "\nDate: " + selected.getDate() + "\nCategory: " + selected.getCategory())
+                            .setPositiveButton("Restore", (d, w) -> {
+                                expenseViewModel.restoreFromTrash(selected);
+                                Toast.makeText(getContext(), "Transaction restored!", Toast.LENGTH_SHORT).show();
+                            })
+                            .setNegativeButton("Delete Forever", (d, w) -> {
+                                expenseViewModel.permanentDelete(selected);
+                                Toast.makeText(getContext(), "Permanently deleted", Toast.LENGTH_SHORT).show();
+                            })
+                            .setNeutralButton("Cancel", null)
+                            .show();
+                })
+                .setPositiveButton("Empty Bin", (dialog, which) -> {
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle("Empty Recycle Bin?")
+                            .setMessage("All " + trashedList.size() + " items will be permanently erased. This cannot be undone.")
+                            .setPositiveButton("Empty All", (d, w) -> {
+                                expenseViewModel.emptyTrash();
+                                Toast.makeText(getContext(), "Recycle Bin emptied", Toast.LENGTH_SHORT).show();
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                })
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    private void showCategoriesDialog() {
+        CategoryViewModel categoryViewModel = new ViewModelProvider(requireActivity()).get(CategoryViewModel.class);
+        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), categories -> {
+            if (categories == null) return;
+            String[] catNames = new String[categories.size()];
+            for (int i = 0; i < categories.size(); i++) {
+                CategoryModel c = categories.get(i);
+                catNames[i] = c.getName() + " (" + (c.isExpense() ? "Expense" : "Income") + ")";
+            }
+
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Custom Categories")
+                    .setItems(catNames, (dialog, which) -> {
+                        CategoryModel selectedCat = categories.get(which);
+                        new AlertDialog.Builder(requireContext())
+                                .setTitle(selectedCat.getName())
+                                .setMessage("Type: " + (selectedCat.isExpense() ? "Expense" : "Income"))
+                                .setNegativeButton("Delete", (d, w) -> {
+                                    categoryViewModel.delete(selectedCat);
+                                    Toast.makeText(getContext(), "Category deleted", Toast.LENGTH_SHORT).show();
+                                })
+                                .setPositiveButton("Close", null)
+                                .show();
+                    })
+                    .setPositiveButton("+ Add Category", (dialog, which) -> {
+                        showAddCategoryDialog(categoryViewModel);
+                    })
+                    .setNegativeButton("Close", null)
+                    .show();
+        });
+    }
+
+    private void showAddCategoryDialog(CategoryViewModel categoryViewModel) {
+        LinearLayout layout = new LinearLayout(getContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        layout.setPadding(pad, pad / 2, pad, 0);
+
+        EditText etName = new EditText(getContext());
+        etName.setHint("Category Name");
+        etName.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        layout.addView(etName);
+
+        String[] types = {"Expense", "Income"};
+        final int[] selectedType = {0};
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("New Category")
+                .setView(layout)
+                .setSingleChoiceItems(types, 0, (d, which) -> selectedType[0] = which)
+                .setPositiveButton("Create", (dialog, which) -> {
+                    String name = etName.getText().toString().trim();
+                    if (!name.isEmpty()) {
+                        boolean isExp = selectedType[0] == 0;
+                        categoryViewModel.insert(new CategoryModel(name, "ic_wallet", isExp ? "#FF6B6B" : "#00B4D8", isExp));
+                        Toast.makeText(getContext(), "Category '" + name + "' created!", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Cancel", null)

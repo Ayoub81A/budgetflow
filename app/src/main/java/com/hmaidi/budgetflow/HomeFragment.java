@@ -40,6 +40,11 @@ public class HomeFragment extends Fragment {
     private ProgressBar pbBudget;
     private List<ExpenseModel> currentExpensesList = new ArrayList<>();
 
+    // Savings Goals
+    private RecyclerView rvSavingsGoals;
+    private SavingsGoalAdapter goalsAdapter;
+    private SavingsGoalViewModel goalsViewModel;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -54,6 +59,16 @@ public class HomeFragment extends Fragment {
         tvBalance.setText(CurrencyHelper.format(getContext(), 0));
         tvIncome.setText(CurrencyHelper.format(getContext(), 0));
         tvExpense.setText(CurrencyHelper.format(getContext(), 0));
+
+        // Savings Goals setup
+        rvSavingsGoals = view.findViewById(R.id.rv_savings_goals);
+        TextView tvAddGoal = view.findViewById(R.id.tv_add_goal);
+        goalsAdapter = new SavingsGoalAdapter(getContext(), new ArrayList<>(), goal -> showGoalActionDialog(goal));
+        rvSavingsGoals.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        rvSavingsGoals.setAdapter(goalsAdapter);
+        if (tvAddGoal != null) {
+            tvAddGoal.setOnClickListener(v -> showAddGoalDialog());
+        }
 
         // Budget Tracker Views
         cardBudgetTracker = view.findViewById(R.id.card_budget_tracker);
@@ -133,6 +148,17 @@ public class HomeFragment extends Fragment {
             updateBalance();
         });
 
+        // Observe Savings Goals
+        goalsViewModel = new ViewModelProvider(requireActivity()).get(SavingsGoalViewModel.class);
+        goalsViewModel.getAllGoals().observe(getViewLifecycleOwner(), goals -> {
+            goalsAdapter.updateList(goals != null ? goals : new ArrayList<>());
+            if (goals == null || goals.isEmpty()) {
+                rvSavingsGoals.setVisibility(View.GONE);
+            } else {
+                rvSavingsGoals.setVisibility(View.VISIBLE);
+            }
+        });
+
         return view;
     }
 
@@ -190,6 +216,8 @@ public class HomeFragment extends Fragment {
             tvBudgetPercent.setTextColor(progressColor);
         }
         pbBudget.setProgressTintList(ColorStateList.valueOf(progressColor));
+
+        BudgetNotificationHelper.checkAndNotifyBudget(getContext(), thisMonthSpent, budget);
     }
 
     private double calculateThisMonthExpenses(List<ExpenseModel> expenses) {
@@ -245,6 +273,91 @@ public class HomeFragment extends Fragment {
                     if (!val.isEmpty()) {
                         CurrencyHelper.saveBudget(getContext(), Double.parseDouble(val));
                         updateBudgetProgress();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showAddGoalDialog() {
+        if (getContext() == null) return;
+        LinearLayout layout = new LinearLayout(getContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        layout.setPadding(pad, pad / 2, pad, 0);
+
+        EditText etTitle = new EditText(getContext());
+        etTitle.setHint("Goal title (e.g. New Laptop)");
+        etTitle.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        layout.addView(etTitle);
+
+        EditText etTarget = new EditText(getContext());
+        etTarget.setHint("Target amount");
+        etTarget.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        etTarget.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        layout.addView(etTarget);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Create Savings Goal")
+                .setView(layout)
+                .setPositiveButton("Create", (dialog, which) -> {
+                    String title = etTitle.getText().toString().trim();
+                    String targetStr = etTarget.getText().toString().trim();
+                    if (!title.isEmpty() && !targetStr.isEmpty()) {
+                        try {
+                            double target = Double.parseDouble(targetStr);
+                            SavingsGoal goal = new SavingsGoal(title, target, 0, "ic_savings", "#7B5EA7", "");
+                            goalsViewModel.insert(goal);
+                            Toast.makeText(getContext(), "Goal created!", Toast.LENGTH_SHORT).show();
+                        } catch (Exception ignored) {}
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showGoalActionDialog(SavingsGoal goal) {
+        if (getContext() == null) return;
+        String[] actions = {"Add Money to Goal", "Delete Goal"};
+        new AlertDialog.Builder(requireContext())
+                .setTitle(goal.getTitle())
+                .setItems(actions, (dialog, which) -> {
+                    if (which == 0) {
+                        showAddFundsDialog(goal);
+                    } else if (which == 1) {
+                        goalsViewModel.delete(goal);
+                        Toast.makeText(getContext(), "Goal deleted", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    private void showAddFundsDialog(SavingsGoal goal) {
+        if (getContext() == null) return;
+        EditText etAmount = new EditText(getContext());
+        etAmount.setHint("Amount to deposit");
+        etAmount.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        etAmount.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+
+        FrameLayout container = new FrameLayout(requireContext());
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(pad, pad / 2, pad, 0);
+        etAmount.setLayoutParams(lp);
+        container.addView(etAmount);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Add Funds: " + goal.getTitle())
+                .setView(container)
+                .setPositiveButton("Deposit", (dialog, which) -> {
+                    String val = etAmount.getText().toString().trim();
+                    if (!val.isEmpty()) {
+                        try {
+                            double added = Double.parseDouble(val);
+                            goalsViewModel.addFunds(goal.getId(), added);
+                            Toast.makeText(getContext(), "Added " + CurrencyHelper.format(getContext(), added) + " to goal!", Toast.LENGTH_SHORT).show();
+                        } catch (Exception ignored) {}
                     }
                 })
                 .setNegativeButton("Cancel", null)

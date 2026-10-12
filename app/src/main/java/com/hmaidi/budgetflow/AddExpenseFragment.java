@@ -106,15 +106,87 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         });
 
         // Category selection
-        int[] categoryIds = {R.id.cat_food, R.id.cat_transport,
-                R.id.cat_shopping, R.id.cat_health, R.id.cat_entertainment};
-        String[] categoryNames = {"Food", "Transport", "Shopping", "Health", "Entertainment"};
+        LinearLayout categoryRow = view.findViewById(R.id.category_row);
+        CategoryViewModel categoryViewModel = new ViewModelProvider(requireActivity())
+                .get(CategoryViewModel.class);
 
-        for (int i = 0; i < categoryIds.length; i++) {
-            LinearLayout cat = view.findViewById(categoryIds[i]);
-            String name = categoryNames[i];
-            cat.setOnClickListener(v -> selectCategory(view, cat, name, categoryIds));
-        }
+        categoryViewModel.getExpenseCategories().observe(getViewLifecycleOwner(), categories -> {
+            if (categories == null || getContext() == null) return;
+            categoryRow.removeAllViews();
+
+            float density = getResources().getDisplayMetrics().density;
+            int widthPx = (int) (64 * density);
+            int marginPx = (int) (8 * density);
+            int iconSizePx = (int) (32 * density);
+            int iconPadPx = (int) (6 * density);
+
+            for (CategoryModel cat : categories) {
+                LinearLayout catLayout = new LinearLayout(getContext());
+                catLayout.setOrientation(LinearLayout.VERTICAL);
+                catLayout.setGravity(android.view.Gravity.CENTER);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(widthPx, ViewGroup.LayoutParams.MATCH_PARENT);
+                params.setMarginEnd(marginPx);
+                catLayout.setLayoutParams(params);
+
+                ImageView icon = new ImageView(getContext());
+                LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(iconSizePx, iconSizePx);
+                icon.setLayoutParams(iconParams);
+                icon.setImageResource(resolveIconRes(cat.getIcon()));
+                icon.setBackgroundResource(R.drawable.circle_bg);
+                icon.setPadding(iconPadPx, iconPadPx, iconPadPx, iconPadPx);
+
+                TextView label = new TextView(getContext());
+                label.setText(cat.getName());
+                label.setTextSize(9);
+                label.setGravity(android.view.Gravity.CENTER);
+                LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                textParams.topMargin = (int) (2 * density);
+                label.setLayoutParams(textParams);
+
+                boolean isSelected = cat.getName().equalsIgnoreCase(selectedCategory);
+                applyCategorySelectionStyle(icon, label, isSelected);
+
+                catLayout.addView(icon);
+                catLayout.addView(label);
+
+                catLayout.setOnClickListener(v -> {
+                    selectedCategory = cat.getName();
+                    updateCategorySelectionVisuals(categoryRow);
+                });
+
+                categoryRow.addView(catLayout);
+            }
+
+            // Quick "+ New" Category button
+            LinearLayout addCatLayout = new LinearLayout(getContext());
+            addCatLayout.setOrientation(LinearLayout.VERTICAL);
+            addCatLayout.setGravity(android.view.Gravity.CENTER);
+            LinearLayout.LayoutParams addParams = new LinearLayout.LayoutParams(widthPx, ViewGroup.LayoutParams.MATCH_PARENT);
+            addCatLayout.setLayoutParams(addParams);
+
+            ImageView addIcon = new ImageView(getContext());
+            LinearLayout.LayoutParams addIconParams = new LinearLayout.LayoutParams(iconSizePx, iconSizePx);
+            addIcon.setLayoutParams(addIconParams);
+            addIcon.setImageResource(R.drawable.ic_add);
+            addIcon.setBackgroundResource(R.drawable.circle_bg);
+            addIcon.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.bg_dark)));
+            addIcon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.purple_light)));
+            addIcon.setPadding(iconPadPx, iconPadPx, iconPadPx, iconPadPx);
+
+            TextView addLabel = new TextView(getContext());
+            addLabel.setText("+ New");
+            addLabel.setTextSize(9);
+            addLabel.setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_light));
+            LinearLayout.LayoutParams addTextParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            addTextParams.topMargin = (int) (2 * density);
+            addLabel.setLayoutParams(addTextParams);
+
+            addCatLayout.addView(addIcon);
+            addCatLayout.addView(addLabel);
+
+            addCatLayout.setOnClickListener(v -> showQuickAddCategoryDialog(categoryViewModel));
+            categoryRow.addView(addCatLayout);
+        });
 
         // Date picker
         etDate.setOnClickListener(v -> {
@@ -212,26 +284,81 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         return view;
     }
 
-    private void selectCategory(View root, LinearLayout selected,
-                                String name, int[] allIds) {
-        for (int id : allIds) {
-            LinearLayout cat = root.findViewById(id);
-            ImageView icon = (ImageView) cat.getChildAt(0);
-            TextView label = (TextView) cat.getChildAt(1);
+    private void applyCategorySelectionStyle(ImageView icon, TextView label, boolean isSelected) {
+        if (getContext() == null) return;
+        if (isSelected) {
+            icon.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.purple_main)));
+            icon.setImageTintList(ColorStateList.valueOf(Color.WHITE));
+            label.setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_light));
+        } else {
             icon.setBackgroundTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(requireContext(), R.color.bg_dark)));
             icon.setImageTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(requireContext(), R.color.text_secondary)));
             label.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         }
+    }
 
-        ImageView icon = (ImageView) selected.getChildAt(0);
-        TextView label = (TextView) selected.getChildAt(1);
-        icon.setBackgroundTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(requireContext(), R.color.purple_main)));
-        icon.setImageTintList(ColorStateList.valueOf(Color.WHITE));
-        label.setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_light));
-        selectedCategory = name;
+    private void updateCategorySelectionVisuals(LinearLayout categoryRow) {
+        for (int i = 0; i < categoryRow.getChildCount() - 1; i++) {
+            View child = categoryRow.getChildAt(i);
+            if (child instanceof LinearLayout) {
+                LinearLayout item = (LinearLayout) child;
+                ImageView icon = (ImageView) item.getChildAt(0);
+                TextView label = (TextView) item.getChildAt(1);
+                boolean isSelected = label.getText().toString().equalsIgnoreCase(selectedCategory);
+                applyCategorySelectionStyle(icon, label, isSelected);
+            }
+        }
+    }
+
+    private void showQuickAddCategoryDialog(CategoryViewModel categoryViewModel) {
+        if (getContext() == null) return;
+        android.widget.EditText input = new android.widget.EditText(getContext());
+        input.setHint("Category name");
+        input.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        android.widget.FrameLayout container = new android.widget.FrameLayout(requireContext());
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(pad, pad / 2, pad, 0);
+        input.setLayoutParams(lp);
+        container.addView(input);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("New Category")
+                .setView(container)
+                .setPositiveButton("Add", (dialog, which) -> {
+                    String name = input.getText().toString().trim();
+                    if (!name.isEmpty()) {
+                        categoryViewModel.insert(new CategoryModel(name, "ic_wallet", "#FF6B6B", true));
+                        selectedCategory = name;
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private int resolveIconRes(String iconName) {
+        if (iconName == null) return R.drawable.ic_wallet;
+        switch (iconName.toLowerCase(java.util.Locale.ROOT)) {
+            case "food":
+            case "ic_food": return R.drawable.ic_food;
+            case "transport":
+            case "ic_transport": return R.drawable.ic_transport;
+            case "shopping":
+            case "ic_shopping": return R.drawable.ic_shopping;
+            case "health":
+            case "ic_health": return R.drawable.ic_health;
+            case "entertainment":
+            case "ic_entertainment": return R.drawable.ic_entertainment;
+            case "card":
+            case "ic_card": return R.drawable.ic_card;
+            case "savings":
+            case "ic_savings": return R.drawable.ic_savings;
+            default: return R.drawable.ic_wallet;
+        }
     }
 
     @Override

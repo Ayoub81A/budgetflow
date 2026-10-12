@@ -89,6 +89,16 @@ public class MainActivity extends AppCompatActivity {
         OneTimeWorkRequest instantCheck =
                 new OneTimeWorkRequest.Builder(RecurringWorker.class).build();
         WorkManager.getInstance(this).enqueue(instantCheck);
+
+        // Request notification permission for Android 13+ (API 33+)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this,
+                    android.Manifest.permission.POST_NOTIFICATIONS) !=
+                    android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                androidx.core.app.ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
     }
 
     private void loadFragment(Fragment fragment) {

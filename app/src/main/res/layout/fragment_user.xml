@@ -228,7 +228,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="8dp"
             app:cardCornerRadius="16dp"
             app:cardBackgroundColor="@color/card_dark">
             <LinearLayout
@@ -242,6 +242,50 @@
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_import" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
                 <TextView android:text="Import Data" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
                 <TextView android:text="Restore from file" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron_right" app:tint="@color/text_secondary"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Manage Categories Row -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/card_dark">
+            <LinearLayout
+                android:id="@+id/row_manage_categories"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_stats" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
+                <TextView android:text="Custom Categories" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+                <TextView android:text="Manage" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron_right" app:tint="@color/text_secondary"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Recycle Bin Row -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/card_dark">
+            <LinearLayout
+                android:id="@+id/row_trash_bin"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_delete" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
+                <TextView android:text="Recycle Bin (Trash)" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+                <TextView android:id="@+id/tv_trash_count" android:text="0 items" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp"/>
                 <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron_right" app:tint="@color/text_secondary"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>

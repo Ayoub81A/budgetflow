@@ -320,8 +320,43 @@
                 </LinearLayout>
 
             </LinearLayout>
-
         </androidx.cardview.widget.CardView>
+
+        <!-- SAVINGS GOALS SECTION -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:text="Savings Goals"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:id="@+id/tv_add_goal"
+                android:text="+ Add Goal"
+                android:textColor="@color/purple_light"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_savings_goals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:clipToPadding="false"
+            android:layout_marginBottom="24dp"/>
 
         <!-- RECENT EXPENSES HEADER -->
         <LinearLayout

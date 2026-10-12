@@ -17,6 +17,8 @@ public class ExpenseModel {
     private boolean isRecurring;
     private String recurringInterval; // "daily", "weekly", "monthly", "yearly"
     private long nextDueDate; // timestamp of next due date
+    private boolean isDeleted; // true if in Trash Bin
+    private long deletedTimestamp; // timestamp when placed in trash
 
     // Constructor for regular expense
     public ExpenseModel(String title, String date,
@@ -31,6 +33,8 @@ public class ExpenseModel {
         this.isRecurring = false;
         this.recurringInterval = "";
         this.nextDueDate = 0;
+        this.isDeleted = false;
+        this.deletedTimestamp = 0;
     }
 
     // Getters
@@ -44,11 +48,20 @@ public class ExpenseModel {
     public boolean isRecurring() { return isRecurring; }
     public String getRecurringInterval() { return recurringInterval; }
     public long getNextDueDate() { return nextDueDate; }
+    public boolean isDeleted() { return isDeleted; }
+    public long getDeletedTimestamp() { return deletedTimestamp; }
 
     // Setters
     public void setId(int id) { this.id = id; }
+    public void setTitle(String title) { this.title = title; }
+    public void setDate(String date) { this.date = date; }
+    public void setAmount(double amount) { this.amount = amount; }
+    public void setCategory(String category) { this.category = category; }
+    public void setExpense(boolean expense) { isExpense = expense; }
     public void setWalletId(int walletId) { this.walletId = walletId; }
     public void setRecurring(boolean recurring) { isRecurring = recurring; }
     public void setRecurringInterval(String interval) { recurringInterval = interval; }
     public void setNextDueDate(long nextDueDate) { this.nextDueDate = nextDueDate; }
+    public void setDeleted(boolean deleted) { isDeleted = deleted; }
+    public void setDeletedTimestamp(long deletedTimestamp) { this.deletedTimestamp = deletedTimestamp; }
 }
