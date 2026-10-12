@@ -88,8 +88,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             btnExpense.setBackgroundTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(requireContext(), R.color.expense_red)));
             btnExpense.setTextColor(Color.WHITE);
-            btnIncome.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.bg_dark)));
+            btnIncome.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             btnIncome.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         });
 
@@ -100,8 +99,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             btnIncome.setBackgroundTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(requireContext(), R.color.income_green)));
             btnIncome.setTextColor(Color.WHITE);
-            btnExpense.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.bg_dark)));
+            btnExpense.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
             btnExpense.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         });
 
@@ -169,7 +167,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             addIcon.setLayoutParams(addIconParams);
             addIcon.setImageResource(R.drawable.ic_add);
             addIcon.setBackgroundResource(R.drawable.circle_bg);
-            addIcon.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.bg_dark)));
+            addIcon.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.input_bg)));
             addIcon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.purple_light)));
             addIcon.setPadding(iconPadPx, iconPadPx, iconPadPx, iconPadPx);
 
@@ -290,10 +288,10 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             icon.setBackgroundTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(requireContext(), R.color.purple_main)));
             icon.setImageTintList(ColorStateList.valueOf(Color.WHITE));
-            label.setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_light));
+            label.setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_main));
         } else {
             icon.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.bg_dark)));
+                    ContextCompat.getColor(requireContext(), R.color.input_bg)));
             icon.setImageTintList(ColorStateList.valueOf(
                     ContextCompat.getColor(requireContext(), R.color.text_secondary)));
             label.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
@@ -370,7 +368,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         for (int id : ids) {
             Button btn = root.findViewById(id);
             btn.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.bg_dark)));
+                    ContextCompat.getColor(requireContext(), R.color.input_bg)));
             btn.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         }
         selected.setBackgroundTintList(ColorStateList.valueOf(

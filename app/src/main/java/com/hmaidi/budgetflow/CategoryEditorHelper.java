@@ -100,7 +100,7 @@ public class CategoryEditorHelper {
                     iv.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(selectedColor[0])));
                     iv.setImageTintList(ColorStateList.valueOf(Color.WHITE));
                 } else {
-                    iv.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.bg_dark)));
+                    iv.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.input_bg)));
                     iv.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.text_secondary)));
                 }
             }

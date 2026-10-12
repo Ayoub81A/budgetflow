@@ -192,13 +192,16 @@ public class StatsFragment extends Fragment {
             entries.add(new PieEntry(entry.getValue(), entry.getKey()));
         }
 
-        // Colors for each slice
+        // Colors for each slice (modern fintech palette)
         List<Integer> colors = new ArrayList<>();
-        colors.add(Color.parseColor("#7B5EA7")); // purple
-        colors.add(Color.parseColor("#F44336")); // red
-        colors.add(Color.parseColor("#4CAF50")); // green
-        colors.add(Color.parseColor("#2196F3")); // blue
-        colors.add(Color.parseColor("#FF9800")); // orange
+        colors.add(Color.parseColor("#6366F1")); // Indigo
+        colors.add(Color.parseColor("#10B981")); // Emerald
+        colors.add(Color.parseColor("#3B82F6")); // Blue
+        colors.add(Color.parseColor("#F43F5E")); // Rose
+        colors.add(Color.parseColor("#F59E0B")); // Amber
+        colors.add(Color.parseColor("#8B5CF6")); // Purple
+        colors.add(Color.parseColor("#06B6D4")); // Cyan
+        colors.add(Color.parseColor("#EC4899")); // Pink
 
         PieDataSet dataSet = new PieDataSet(entries, "");
         dataSet.setColors(colors);

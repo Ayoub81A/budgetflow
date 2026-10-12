@@ -306,7 +306,7 @@ public class HomeFragment extends Fragment {
                     if (!title.isEmpty() && !targetStr.isEmpty()) {
                         try {
                             double target = Double.parseDouble(targetStr);
-                            SavingsGoal goal = new SavingsGoal(title, target, 0, "ic_savings", "#7B5EA7", "");
+                            SavingsGoal goal = new SavingsGoal(title, target, 0, "ic_savings", "#6366F1", "");
                             goalsViewModel.insert(goal);
                             Toast.makeText(getContext(), "Goal created!", Toast.LENGTH_SHORT).show();
                         } catch (Exception ignored) {}

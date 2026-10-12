@@ -29,14 +29,14 @@ public class CategoryViewModel extends AndroidViewModel {
         executor.execute(() -> {
             List<CategoryModel> existing = categoryDao.getAllCategoriesSync();
             if (existing == null || existing.isEmpty()) {
-                categoryDao.insert(new CategoryModel("Food", "ic_food", "#FF6B6B", true));
-                categoryDao.insert(new CategoryModel("Transport", "ic_transport", "#4D96FF", true));
-                categoryDao.insert(new CategoryModel("Shopping", "ic_shopping", "#FFD93D", true));
-                categoryDao.insert(new CategoryModel("Health", "ic_health", "#6BCB77", true));
-                categoryDao.insert(new CategoryModel("Entertainment", "ic_entertainment", "#9D4EDD", true));
-                categoryDao.insert(new CategoryModel("Salary", "ic_wallet", "#00B4D8", false));
-                categoryDao.insert(new CategoryModel("Freelance", "ic_card", "#7209B7", false));
-                categoryDao.insert(new CategoryModel("Investment", "ic_savings", "#38B000", false));
+                categoryDao.insert(new CategoryModel("Food", "ic_food", "#F43F5E", true));
+                categoryDao.insert(new CategoryModel("Transport", "ic_transport", "#2563EB", true));
+                categoryDao.insert(new CategoryModel("Shopping", "ic_shopping", "#F59E0B", true));
+                categoryDao.insert(new CategoryModel("Health", "ic_health", "#10B981", true));
+                categoryDao.insert(new CategoryModel("Entertainment", "ic_entertainment", "#8B5CF6", true));
+                categoryDao.insert(new CategoryModel("Salary", "ic_wallet", "#06B6D4", false));
+                categoryDao.insert(new CategoryModel("Freelance", "ic_card", "#6366F1", false));
+                categoryDao.insert(new CategoryModel("Investment", "ic_savings", "#10B981", false));
             }
         });
     }

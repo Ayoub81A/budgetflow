@@ -231,7 +231,7 @@ public class UserFragment extends Fragment {
                             AppDatabase db = AppDatabase.getInstance(requireContext());
                             db.expenseDao().deleteAll();
                             db.walletDao().deleteAll();
-                            Wallet defaultW = new Wallet("Main Wallet", "ic_wallet", "#7B5EA7");
+                            Wallet defaultW = new Wallet("Main Wallet", "ic_wallet", "#6366F1");
                             db.walletDao().insert(defaultW);
 
                             if (getActivity() != null) {

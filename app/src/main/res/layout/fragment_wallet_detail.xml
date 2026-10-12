@@ -12,7 +12,7 @@
     <View
         android:layout_width="40dp"
         android:layout_height="4dp"
-        android:background="@color/purple_light"
+        android:background="@drawable/sheet_handle"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="20dp"/>
 

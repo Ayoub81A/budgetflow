@@ -161,7 +161,7 @@ public class DataExportImportHelper {
                 Wallet w = new Wallet(
                         wObj.optString("name", "Wallet"),
                         wObj.optString("icon", "ic_wallet"),
-                        wObj.optString("color", "#7B5EA7")
+                        wObj.optString("color", "#6366F1")
                 );
                 w.setId(wObj.optInt("id", 0));
                 w.setBalance(wObj.optDouble("balance", 0.0));
@@ -267,7 +267,7 @@ public class DataExportImportHelper {
                     assignedWalletId = walletNameMap.get(key).getId();
                 } else {
                     // Create wallet if it doesn't exist
-                    Wallet newWallet = new Wallet(walletName, "ic_wallet", "#7B5EA7");
+                    Wallet newWallet = new Wallet(walletName, "ic_wallet", "#6366F1");
                     data.wallets.add(newWallet);
                     walletNameMap.put(key, newWallet);
                 }
@@ -434,7 +434,7 @@ public class DataExportImportHelper {
 
                 // If no wallets at all, ensure at least one default wallet
                 if (walletNameToId.isEmpty()) {
-                    Wallet defaultW = new Wallet("Main Wallet", "ic_wallet", "#7B5EA7");
+                    Wallet defaultW = new Wallet("Main Wallet", "ic_wallet", "#6366F1");
                     long defaultId = db.walletDao().insert(defaultW);
                     walletNameToId.put("main wallet", (int) defaultId);
                 }

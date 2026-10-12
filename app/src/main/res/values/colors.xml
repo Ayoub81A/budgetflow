@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg_dark">#F5F5F5</color>
+    <!-- Background & Surfaces (Clean Slate Porcelain) -->
+    <color name="bg_dark">#F8FAFC</color>
     <color name="card_dark">#FFFFFF</color>
-    <color name="purple_main">#7B5EA7</color>
-    <color name="purple_light">#5E3D8A</color>
-    <color name="income_green">#2E7D32</color>
-    <color name="expense_red">#C62828</color>
-    <color name="text_primary">#1A1A2E</color>
-    <color name="text_secondary">#757575</color>
     <color name="nav_bg">#FFFFFF</color>
+
+    <!-- Brand / Primary Accents (Royal Indigo) -->
+    <color name="purple_main">#4F46E5</color>
+    <color name="purple_light">#6366F1</color>
+
+    <!-- Financial Status Indicators -->
+    <color name="income_green">#059669</color>
+    <color name="expense_red">#DC2626</color>
+
+    <!-- Typography -->
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+
+    <!-- Subtle Accents, Handles & Inputs -->
+    <color name="handle_bar">#CBD5E1</color>
+    <color name="border_subtle">#E2E8F0</color>
+    <color name="input_bg">#F1F5F9</color>
+    <color name="circle_placeholder">#E2E8F0</color>
 </resources>
