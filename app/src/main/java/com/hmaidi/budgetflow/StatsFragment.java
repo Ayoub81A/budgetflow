@@ -1,10 +1,12 @@
 package com.hmaidi.budgetflow;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -14,17 +16,19 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class StatsFragment extends Fragment {
 
-    PieChart pieChart;
-    TextView tvIncome, tvExpense, tvBalance;
-    ExpenseViewModel viewModel;
-    private double totalIncomeAmount = 0;
-    private double totalExpenseAmount = 0;
+    private PieChart pieChart;
+    private TextView tvIncome, tvExpense, tvBalance;
+    private ExpenseViewModel viewModel;
+    private Button btnRangeWeek, btnRangeMonth, btnRangeYear, btnRangeAll;
+    private String selectedRange = "month";
+    private List<ExpenseModel> allExpenses = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -36,35 +40,132 @@ public class StatsFragment extends Fragment {
         tvExpense = view.findViewById(R.id.tv_stats_expense);
         tvBalance = view.findViewById(R.id.tv_stats_balance);
 
+        btnRangeWeek = view.findViewById(R.id.btn_range_week);
+        btnRangeMonth = view.findViewById(R.id.btn_range_month);
+        btnRangeYear = view.findViewById(R.id.btn_range_year);
+        btnRangeAll = view.findViewById(R.id.btn_range_all);
+
+        btnRangeWeek.setOnClickListener(v -> selectRange("week"));
+        btnRangeMonth.setOnClickListener(v -> selectRange("month"));
+        btnRangeYear.setOnClickListener(v -> selectRange("year"));
+        btnRangeAll.setOnClickListener(v -> selectRange("all"));
+
         viewModel = new ViewModelProvider(requireActivity())
                 .get(ExpenseViewModel.class);
 
-        // Observe all expenses to build chart
+        // Observe all expenses
         viewModel.getAllExpenses().observe(getViewLifecycleOwner(), expenses -> {
-            if (expenses == null || expenses.isEmpty()) {
-                pieChart.clear();
-                pieChart.setNoDataText("No expenses yet");
-                pieChart.setNoDataTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
-                pieChart.invalidate();
-                return;
-            }
-            buildPieChart(expenses);
-        });
-
-        // Observe totals for summary
-        viewModel.getTotalIncome().observe(getViewLifecycleOwner(), total -> {
-            totalIncomeAmount = total != null ? total : 0;
-            tvIncome.setText("+" + CurrencyHelper.format(getContext(), totalIncomeAmount));
-            updateBalance();
-        });
-
-        viewModel.getTotalExpenses().observe(getViewLifecycleOwner(), total -> {
-            totalExpenseAmount = total != null ? total : 0;
-            tvExpense.setText("-" + CurrencyHelper.format(getContext(), totalExpenseAmount));
-            updateBalance();
+            allExpenses = expenses != null ? expenses : new ArrayList<>();
+            applyTimeRangeFilter();
         });
 
         return view;
+    }
+
+    private void selectRange(String range) {
+        selectedRange = range;
+        int activeBg = ContextCompat.getColor(requireContext(), R.color.purple_main);
+        int inactiveBg = ContextCompat.getColor(requireContext(), R.color.card_dark);
+        int activeText = Color.WHITE;
+        int inactiveText = ContextCompat.getColor(requireContext(), R.color.text_secondary);
+
+        Button[] buttons = {btnRangeWeek, btnRangeMonth, btnRangeYear, btnRangeAll};
+        String[] ranges = {"week", "month", "year", "all"};
+
+        for (int i = 0; i < buttons.length; i++) {
+            boolean isActive = ranges[i].equals(range);
+            buttons[i].setBackgroundTintList(ColorStateList.valueOf(isActive ? activeBg : inactiveBg));
+            buttons[i].setTextColor(isActive ? activeText : inactiveText);
+        }
+
+        applyTimeRangeFilter();
+    }
+
+    private void applyTimeRangeFilter() {
+        if (getContext() == null) return;
+        List<ExpenseModel> filtered = filterExpensesByRange(allExpenses, selectedRange);
+
+        double periodIncome = 0;
+        double periodExpense = 0;
+        List<ExpenseModel> expenseOnly = new ArrayList<>();
+
+        for (ExpenseModel item : filtered) {
+            if (item.isExpense()) {
+                periodExpense += item.getAmount();
+                expenseOnly.add(item);
+            } else {
+                periodIncome += item.getAmount();
+            }
+        }
+
+        tvIncome.setText("+" + CurrencyHelper.format(getContext(), periodIncome));
+        tvExpense.setText("-" + CurrencyHelper.format(getContext(), periodExpense));
+
+        double net = periodIncome - periodExpense;
+        tvBalance.setText(CurrencyHelper.format(getContext(), net));
+        if (net < 0) {
+            tvBalance.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_red));
+        } else {
+            tvBalance.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_green));
+        }
+
+        buildPieChart(expenseOnly);
+    }
+
+    private List<ExpenseModel> filterExpensesByRange(List<ExpenseModel> list, String range) {
+        if (list == null) return new ArrayList<>();
+        if ("all".equals(range)) return new ArrayList<>(list);
+
+        List<ExpenseModel> result = new ArrayList<>();
+        Calendar now = Calendar.getInstance();
+        int currentYear = now.get(Calendar.YEAR);
+        int currentMonth = now.get(Calendar.MONTH) + 1;
+
+        // Current week calculation (Monday through Sunday)
+        Calendar startOfWeek = Calendar.getInstance();
+        startOfWeek.setFirstDayOfWeek(Calendar.MONDAY);
+        startOfWeek.set(Calendar.DAY_OF_WEEK, startOfWeek.getFirstDayOfWeek());
+        startOfWeek.set(Calendar.HOUR_OF_DAY, 0);
+        startOfWeek.set(Calendar.MINUTE, 0);
+        startOfWeek.set(Calendar.SECOND, 0);
+        startOfWeek.set(Calendar.MILLISECOND, 0);
+        long startOfWeekMillis = startOfWeek.getTimeInMillis();
+
+        Calendar endOfWeek = Calendar.getInstance();
+        endOfWeek.setTimeInMillis(startOfWeekMillis);
+        endOfWeek.add(Calendar.DAY_OF_YEAR, 7);
+        long endOfWeekMillis = endOfWeek.getTimeInMillis();
+
+        for (ExpenseModel item : list) {
+            String dateStr = item.getDate();
+            if (dateStr == null) continue;
+            String[] parts = dateStr.trim().split("/");
+            if (parts.length != 3) continue;
+
+            try {
+                int d = Integer.parseInt(parts[0]);
+                int m = Integer.parseInt(parts[1]);
+                int y = Integer.parseInt(parts[2]);
+
+                if ("year".equals(range)) {
+                    if (y == currentYear) {
+                        result.add(item);
+                    }
+                } else if ("month".equals(range)) {
+                    if (y == currentYear && m == currentMonth) {
+                        result.add(item);
+                    }
+                } else if ("week".equals(range)) {
+                    Calendar itemCal = Calendar.getInstance();
+                    itemCal.set(y, m - 1, d, 12, 0, 0);
+                    long itemTime = itemCal.getTimeInMillis();
+                    if (itemTime >= startOfWeekMillis && itemTime < endOfWeekMillis) {
+                        result.add(item);
+                    }
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+        return result;
     }
 
     private void buildPieChart(List<ExpenseModel> expenses) {
@@ -123,10 +224,5 @@ public class StatsFragment extends Fragment {
         pieChart.setEntryLabelTextSize(11f);
         pieChart.animateY(800);
         pieChart.invalidate();
-    }
-
-    private void updateBalance() {
-        double balance = totalIncomeAmount - totalExpenseAmount;
-        tvBalance.setText(CurrencyHelper.format(getContext(), balance));
     }
 }

@@ -38,9 +38,10 @@ A modern, offline-first personal finance and expense tracking Android applicatio
 - **Transaction Inspection**: View recurring recurrence intervals and next scheduled payment dates directly in transaction details.
 
 ### 📈 Analytics & Visual Charts
+- **Time Range Filtering**: Seamlessly toggle between **This Week**, **This Month**, **This Year**, and **All Time** to view isolated financial insights.
 - **Interactive Pie Chart**: Visual breakdown of expenses by category powered by MPAndroidChart.
 - **Theme-Aware Charts**: Automatically adapts slice styling, text colors, and backgrounds between Light and Dark themes.
-- **Net Calculation**: Displays Net Savings (`Income - Expenses`).
+- **Dynamic Period Totals**: Displays period-specific Income, Expenses, and Net Savings (`Income - Expenses`).
 
 ### ⚙️ Personalization & Settings
 - **Dark Mode**: Complete system-wide Dark Theme support with high-contrast surfaces and persistent state.
