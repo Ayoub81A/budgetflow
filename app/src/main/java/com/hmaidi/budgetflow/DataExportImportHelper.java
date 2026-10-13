@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -322,6 +323,10 @@ public class DataExportImportHelper {
     // --- PARSING CSV ---
 
     public static BackupData parseCsv(String csvString, List<Wallet> existingWallets) throws Exception {
+        return parseCsv(csvString, existingWallets, null);
+    }
+
+    public static BackupData parseCsv(String csvString, List<Wallet> existingWallets, Integer targetWalletId) throws Exception {
         BackupData data = new BackupData();
         List<String[]> rows = parseCsvRows(csvString);
 
@@ -331,28 +336,40 @@ public class DataExportImportHelper {
 
         // Header mapping
         String[] header = rows.get(0);
-        int dateCol = -1, titleCol = -1, amountCol = -1, typeCol = -1,
+        int dateCol = -1, titleCol = -1, amountCol = -1, debitCol = -1, creditCol = -1, typeCol = -1,
                 categoryCol = -1, walletCol = -1, recurringCol = -1, intervalCol = -1;
 
         for (int i = 0; i < header.length; i++) {
             String col = header[i].trim().toLowerCase().replace("\uFEFF", "");
-            if (col.contains("date")) dateCol = i;
-            else if (col.contains("title") || col.contains("name") || col.contains("description")) titleCol = i;
-            else if (col.contains("amount") || col.contains("cost") || col.contains("price")) amountCol = i;
-            else if (col.contains("type")) typeCol = i;
-            else if (col.contains("category")) categoryCol = i;
-            else if (col.contains("wallet")) walletCol = i;
-            else if (col.contains("recurring")) recurringCol = i;
-            else if (col.contains("interval")) intervalCol = i;
+            if (col.contains("date") || col.contains("time")) {
+                if (dateCol == -1) dateCol = i;
+            } else if (col.contains("debit") || col.contains("withdrawal") || col.contains("outflow") || col.contains("paid out")) {
+                debitCol = i;
+            } else if (col.contains("credit") || col.contains("deposit") || col.contains("inflow") || col.contains("paid in")) {
+                creditCol = i;
+            } else if (col.contains("amount") || col.contains("cost") || col.contains("price") || col.contains("sum") || col.contains("value")) {
+                if (amountCol == -1) amountCol = i;
+            } else if (col.contains("title") || col.contains("name") || col.contains("description") || col.contains("payee") || col.contains("memo") || col.contains("details")) {
+                if (titleCol == -1) titleCol = i;
+            } else if (col.contains("type")) {
+                typeCol = i;
+            } else if (col.contains("category") || col.contains("tag") || col.contains("class")) {
+                categoryCol = i;
+            } else if (col.contains("wallet") || col.contains("account") || col.contains("bank")) {
+                walletCol = i;
+            } else if (col.contains("recurring")) {
+                recurringCol = i;
+            } else if (col.contains("interval")) {
+                intervalCol = i;
+            }
         }
 
         // Fallbacks if header names don't match exactly
         if (dateCol == -1) dateCol = 0;
-        if (titleCol == -1) titleCol = 1;
-        if (amountCol == -1) amountCol = 2;
-        if (typeCol == -1) typeCol = 3;
-        if (categoryCol == -1) categoryCol = 4;
-        if (walletCol == -1 && header.length > 5) walletCol = 5;
+        if (titleCol == -1) titleCol = (header.length > 1) ? 1 : 0;
+        if (amountCol == -1 && debitCol == -1 && creditCol == -1) {
+            amountCol = (header.length > 2) ? 2 : 0;
+        }
 
         // Map of wallet name (lowercased) to Wallet
         Map<String, Wallet> walletNameMap = new HashMap<>();
@@ -364,6 +381,9 @@ public class DataExportImportHelper {
 
         int defaultWalletId = (existingWallets != null && !existingWallets.isEmpty())
                 ? existingWallets.get(0).getId() : 1;
+        if (targetWalletId != null) {
+            defaultWalletId = targetWalletId;
+        }
 
         // Process data rows
         for (int r = 1; r < rows.size(); r++) {
@@ -372,31 +392,60 @@ public class DataExportImportHelper {
                 continue;
             }
 
-            String date = getCol(row, dateCol, "1/1/2026");
+            String rawDate = getCol(row, dateCol, "");
+            String date = normalizeDate(rawDate);
             String title = getCol(row, titleCol, "Transaction");
-            String amountStr = getCol(row, amountCol, "0")
-                    .replaceAll("[^0-9.]", "");
-            double amount = 0;
-            try {
-                if (!amountStr.isEmpty()) amount = Double.parseDouble(amountStr);
-            } catch (Exception ignored) {}
 
-            String typeStr = getCol(row, typeCol, "Expense");
-            boolean isExpense = !typeStr.equalsIgnoreCase("income");
+            double amount = 0;
+            boolean isExpense = true;
+
+            // Check if separate Debit & Credit columns exist
+            if (debitCol != -1 || creditCol != -1) {
+                double debitVal = parseAmount(getCol(row, debitCol, ""));
+                double creditVal = parseAmount(getCol(row, creditCol, ""));
+                if (creditVal > 0) {
+                    amount = creditVal;
+                    isExpense = false;
+                } else {
+                    amount = debitVal;
+                    isExpense = true;
+                }
+            } else {
+                String rawAmount = getCol(row, amountCol, "0");
+                boolean isNegative = rawAmount.contains("-") || (rawAmount.startsWith("(") && rawAmount.endsWith(")"));
+                amount = parseAmount(rawAmount);
+
+                String typeStr = getCol(row, typeCol, "");
+                if (!typeStr.isEmpty()) {
+                    isExpense = !typeStr.equalsIgnoreCase("income") && !typeStr.equalsIgnoreCase("credit");
+                } else {
+                    if (isNegative) {
+                        isExpense = true;
+                    } else if (rawAmount.contains("+")) {
+                        isExpense = false;
+                    } else {
+                        isExpense = true;
+                    }
+                }
+            }
+
+            if (amount <= 0) continue; // Skip zero-value or invalid lines
 
             String category = getCol(row, categoryCol, isExpense ? "General" : "Income");
-            String walletName = getCol(row, walletCol, "Default");
-
             int assignedWalletId = defaultWalletId;
-            if (!walletName.isEmpty()) {
-                String key = walletName.toLowerCase();
-                if (walletNameMap.containsKey(key)) {
-                    assignedWalletId = walletNameMap.get(key).getId();
-                } else {
-                    // Create wallet if it doesn't exist
-                    Wallet newWallet = new Wallet(walletName, "ic_wallet", "#6366F1");
-                    data.wallets.add(newWallet);
-                    walletNameMap.put(key, newWallet);
+
+            // If a specific target wallet was not forced, allow wallet mapping from CSV column
+            if (targetWalletId == null && walletCol != -1) {
+                String walletName = getCol(row, walletCol, "");
+                if (!walletName.isEmpty()) {
+                    String key = walletName.toLowerCase();
+                    if (walletNameMap.containsKey(key)) {
+                        assignedWalletId = walletNameMap.get(key).getId();
+                    } else {
+                        Wallet newWallet = new Wallet(walletName, "ic_wallet", "#6366F1");
+                        data.wallets.add(newWallet);
+                        walletNameMap.put(key, newWallet);
+                    }
                 }
             }
 
@@ -413,6 +462,45 @@ public class DataExportImportHelper {
         }
 
         return data;
+    }
+
+    private static double parseAmount(String str) {
+        if (str == null) return 0.0;
+        String clean = str.replace("$", "").replace("€", "").replace("£", "").replace(",", "").replaceAll("[^0-9.]", "").trim();
+        try {
+            return clean.isEmpty() ? 0.0 : Double.parseDouble(clean);
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    private static String normalizeDate(String rawDate) {
+        if (rawDate == null || rawDate.trim().isEmpty()) {
+            Calendar c = Calendar.getInstance();
+            return c.get(Calendar.DAY_OF_MONTH) + "/" + (c.get(Calendar.MONTH) + 1) + "/" + c.get(Calendar.YEAR);
+        }
+        String s = rawDate.trim().split("T")[0].split(" ")[0]; // Strip time component if ISO-8601
+
+        // yyyy-MM-dd or yyyy/MM/dd
+        if (s.matches("^\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}$")) {
+            String[] p = s.split("[-/.]");
+            int y = Integer.parseInt(p[0]);
+            int m = Integer.parseInt(p[1]);
+            int d = Integer.parseInt(p[2]);
+            return d + "/" + m + "/" + y;
+        }
+        // dd/MM/yyyy or dd-MM-yyyy
+        if (s.matches("^\\d{1,2}[-/.]\\d{1,2}[-/.]\\d{4}$")) {
+            String[] p = s.split("[-/.]");
+            int d = Integer.parseInt(p[0]);
+            int m = Integer.parseInt(p[1]);
+            int y = Integer.parseInt(p[2]);
+            if (m > 12 && d <= 12) {
+                int temp = d; d = m; m = temp;
+            }
+            return d + "/" + m + "/" + y;
+        }
+        return s;
     }
 
     private static String getCol(String[] row, int index, String fallback) {

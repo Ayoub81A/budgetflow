@@ -43,6 +43,7 @@ public class UserFragment extends Fragment {
     private ActivityResultLauncher<Intent> importFileLauncher;
     private ActivityResultLauncher<Intent> exportStatementLauncher;
     private String pendingStatementHtml;
+    private Integer targetCsvWalletId = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -260,7 +261,7 @@ public class UserFragment extends Fragment {
         rowExportData.setOnClickListener(v -> showExportDialog());
 
         // Import Data
-        rowImportData.setOnClickListener(v -> startImportPicker());
+        rowImportData.setOnClickListener(v -> showImportOptionsDialog());
 
         // Clear all data
         rowClearData.setOnClickListener(v -> {
@@ -424,6 +425,57 @@ public class UserFragment extends Fragment {
         });
     }
 
+    private void showImportOptionsDialog() {
+        if (getContext() == null) return;
+        String[] options = {"Import Bank Statement (CSV)", "Import Full Backup (JSON)"};
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Import Data")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        promptSelectTargetWalletForCsv();
+                    } else {
+                        targetCsvWalletId = null;
+                        startImportPicker();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void promptSelectTargetWalletForCsv() {
+        if (getContext() == null) return;
+        Executors.newSingleThreadExecutor().execute(() -> {
+            AppDatabase db = AppDatabase.getInstance(getContext());
+            List<Wallet> wallets = db.walletDao().getAllWalletsSync();
+            if (getActivity() == null) return;
+            getActivity().runOnUiThread(() -> {
+                if (wallets == null || wallets.isEmpty()) {
+                    targetCsvWalletId = null;
+                    startImportPicker();
+                    return;
+                }
+                String[] walletOptions = new String[wallets.size() + 1];
+                walletOptions[0] = "Auto-detect / Use CSV Wallets";
+                for (int i = 0; i < wallets.size(); i++) {
+                    walletOptions[i + 1] = wallets.get(i).getName();
+                }
+
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Select Target Wallet for Statement")
+                        .setItems(walletOptions, (d, sel) -> {
+                            if (sel == 0) {
+                                targetCsvWalletId = null;
+                            } else {
+                                targetCsvWalletId = wallets.get(sel - 1).getId();
+                            }
+                            startImportPicker();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            });
+        });
+    }
+
     private void startImportPicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -456,7 +508,7 @@ public class UserFragment extends Fragment {
                         if (isJson) {
                             data = DataExportImportHelper.parseJson(trimmed);
                         } else {
-                            data = DataExportImportHelper.parseCsv(trimmed, existingWallets);
+                            data = DataExportImportHelper.parseCsv(trimmed, existingWallets, targetCsvWalletId);
                         }
 
                         if (getActivity() != null) {
@@ -484,6 +536,17 @@ public class UserFragment extends Fragment {
         if (getContext() == null) return;
         int expenseCount = data.expenses != null ? data.expenses.size() : 0;
         int walletCount = data.wallets != null ? data.wallets.size() : 0;
+
+        if (data.currencyCode == null && walletCount == 0) {
+            // This is a CSV bank statement import
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Import Bank Statement")
+                    .setMessage("Found " + expenseCount + " transaction(s) in this CSV statement.\n\nImport them into your records now?")
+                    .setPositiveButton("Import", (dialog, which) -> executeImport(data, false))
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            return;
+        }
 
         String msg = "Found " + expenseCount + " transaction(s) and " + walletCount + " wallet(s).\n\n"
                 + "Choose how to import:\n"

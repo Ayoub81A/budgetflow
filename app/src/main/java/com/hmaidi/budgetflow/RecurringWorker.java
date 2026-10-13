@@ -65,6 +65,10 @@ public class RecurringWorker extends Worker {
             }
         }
 
+        if (!dueExpenses.isEmpty()) {
+            BudgetNotificationHelper.checkAllBudgetsAsync(getApplicationContext());
+        }
+
         return Result.success();
     }
 

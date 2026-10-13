@@ -18,7 +18,10 @@ public class ExpenseRepository {
 
     private TransactionHistoryDao historyDao;
 
+    private Application application;
+
     public ExpenseRepository(Application application) {
+        this.application = application;
         AppDatabase db = AppDatabase.getInstance(application);
         expenseDao = db.expenseDao();
         walletDao = db.walletDao();
@@ -40,6 +43,9 @@ public class ExpenseRepository {
                     wallet.setBalance(wallet.getBalance() + expense.getAmount());
                 }
                 walletDao.update(wallet);
+            }
+            if (expense.isExpense()) {
+                BudgetNotificationHelper.checkAllBudgetsAsync(application);
             }
         });
     }
@@ -93,6 +99,9 @@ public class ExpenseRepository {
             }
 
             expenseDao.update(newExpense);
+            if (newExpense.isExpense()) {
+                BudgetNotificationHelper.checkAllBudgetsAsync(application);
+            }
         });
     }
 
