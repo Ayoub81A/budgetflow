@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.textfield.TextInputEditText;
@@ -70,7 +71,10 @@ public class AllTransactionsFragment extends Fragment {
 
         // Back button
         ImageView btnBack = view.findViewById(R.id.btn_back);
-        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+        btnBack.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
+            requireActivity().getSupportFragmentManager().popBackStack();
+        });
 
         // Set up adapter
         adapter = new ExpenseAdapter(getContext(), new ArrayList<>(), expense -> {
@@ -79,6 +83,24 @@ public class AllTransactionsFragment extends Fragment {
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
+
+        // Attach Swipe to Delete
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteCallback(getContext(), position -> {
+            ExpenseModel expense = adapter.getItemAt(position);
+            if (expense != null) {
+                HapticHelper.vibrateTick(recyclerView);
+                viewModel.delete(expense);
+                com.google.android.material.snackbar.Snackbar.make(
+                        view,
+                        "Moved \"" + expense.getTitle() + "\" to Trash",
+                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                ).setAction("UNDO", v -> {
+                    HapticHelper.vibrateConfirm(v);
+                    viewModel.restoreFromTrash(expense);
+                }).show();
+            }
+        }));
+        itemTouchHelper.attachToRecyclerView(recyclerView);
 
         // Search
         TextInputEditText etSearch = view.findViewById(R.id.et_search);
@@ -92,13 +114,28 @@ public class AllTransactionsFragment extends Fragment {
         });
 
         // Quick type buttons
-        btnFilterAll.setOnClickListener(v -> setQuickType("all"));
-        btnFilterExpense.setOnClickListener(v -> setQuickType("expense"));
-        btnFilterIncome.setOnClickListener(v -> setQuickType("income"));
-        btnFilterTransfer.setOnClickListener(v -> setQuickType("transfer"));
+        btnFilterAll.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
+            setQuickType("all");
+        });
+        btnFilterExpense.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
+            setQuickType("expense");
+        });
+        btnFilterIncome.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
+            setQuickType("income");
+        });
+        btnFilterTransfer.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
+            setQuickType("transfer");
+        });
 
         // Filter dialog trigger
-        View.OnClickListener openFilterAction = v -> showFilterBottomSheet();
+        View.OnClickListener openFilterAction = v -> {
+            HapticHelper.vibrateTick(v);
+            showFilterBottomSheet();
+        };
         btnFilterDialog.setOnClickListener(openFilterAction);
         btnQuickFilterMore.setOnClickListener(openFilterAction);
 

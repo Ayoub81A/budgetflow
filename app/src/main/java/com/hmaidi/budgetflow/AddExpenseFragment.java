@@ -108,6 +108,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             TextView chip = view.findViewById(chipId);
             if (chip != null && etTags != null) {
                 chip.setOnClickListener(v -> {
+                    HapticHelper.vibrateTick(v);
                     String chipText = chip.getText().toString().trim();
                     String current = etTags.getText() != null ? etTags.getText().toString().trim() : "";
                     if (current.isEmpty()) {
@@ -168,6 +169,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
 
         // Toggle buttons
         btnExpense.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
             isExpense = true;
             categoryContainer.setVisibility(View.VISIBLE);
             layoutSource.setVisibility(View.GONE);
@@ -180,6 +182,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         });
 
         btnIncome.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
             isExpense = false;
             categoryContainer.setVisibility(View.GONE);
             layoutSource.setVisibility(View.VISIBLE);
@@ -236,6 +239,7 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
                 catLayout.addView(label);
 
                 catLayout.setOnClickListener(v -> {
+                    HapticHelper.vibrateTick(v);
                     selectedCategory = cat.getName();
                     updateCategorySelectionVisuals(categoryRow);
                 });
@@ -312,18 +316,22 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         }
 
         btnDaily.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
             selectedInterval = "daily";
             highlightInterval(view, btnDaily);
         });
         btnWeekly.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
             selectedInterval = "weekly";
             highlightInterval(view, btnWeekly);
         });
         btnMonthly.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
             selectedInterval = "monthly";
             highlightInterval(view, btnMonthly);
         });
         btnYearly.setOnClickListener(v -> {
+            HapticHelper.vibrateTick(v);
             selectedInterval = "yearly";
             highlightInterval(view, btnYearly);
         });
@@ -364,19 +372,24 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             String date = etDate.getText().toString().trim();
 
             if (title.isEmpty() || amount.isEmpty() || date.isEmpty()) {
+                HapticHelper.vibrateError(v);
                 Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (isExpense && selectedCategory.isEmpty()) {
+                HapticHelper.vibrateError(v);
                 Toast.makeText(getContext(), "Please select a category", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (selectedWalletId == -1) {
+                HapticHelper.vibrateError(v);
                 Toast.makeText(getContext(), "Please select a wallet", Toast.LENGTH_SHORT).show();
                 return;
             }
+
+            HapticHelper.vibrateConfirm(v);
 
             String cat = selectedCategory;
             if (!isExpense) {

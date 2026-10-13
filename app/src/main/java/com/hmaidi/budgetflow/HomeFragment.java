@@ -18,6 +18,7 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
@@ -162,6 +163,24 @@ public class HomeFragment extends Fragment {
         // Set up ViewModel
         viewModel = new ViewModelProvider(requireActivity())
                 .get(ExpenseViewModel.class);
+
+        // Attach Swipe to Delete
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteCallback(getContext(), position -> {
+            ExpenseModel expense = adapter.getItemAt(position);
+            if (expense != null) {
+                HapticHelper.vibrateTick(recyclerView);
+                viewModel.delete(expense);
+                com.google.android.material.snackbar.Snackbar.make(
+                        view,
+                        "Moved \"" + expense.getTitle() + "\" to Trash",
+                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                ).setAction("UNDO", v -> {
+                    HapticHelper.vibrateConfirm(v);
+                    viewModel.restoreFromTrash(expense);
+                }).show();
+            }
+        }));
+        itemTouchHelper.attachToRecyclerView(recyclerView);
 
         // Observe expenses list
         viewModel.getAllExpenses().observe(getViewLifecycleOwner(), expenses -> {

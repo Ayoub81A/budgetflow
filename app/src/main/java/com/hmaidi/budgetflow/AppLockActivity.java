@@ -67,19 +67,28 @@ public class AppLockActivity extends AppCompatActivity {
         for (int id : digitIds) {
             TextView btn = findViewById(id);
             if (btn != null) {
-                btn.setOnClickListener(v -> onDigitPressed(btn.getText().toString()));
+                btn.setOnClickListener(v -> {
+                    HapticHelper.vibrateTick(v);
+                    onDigitPressed(btn.getText().toString());
+                });
             }
         }
 
         ImageView btnDelete = findViewById(R.id.btn_key_delete);
         if (btnDelete != null) {
-            btnDelete.setOnClickListener(v -> onDeletePressed());
+            btnDelete.setOnClickListener(v -> {
+                HapticHelper.vibrateTick(v);
+                onDeletePressed();
+            });
         }
 
         if (btnBiometric != null) {
             if (SecurityHelper.isBiometricHardwareAvailable(this) && SecurityHelper.isBiometricEnabled(this)) {
                 btnBiometric.setVisibility(View.VISIBLE);
-                btnBiometric.setOnClickListener(v -> showBiometricPrompt());
+                btnBiometric.setOnClickListener(v -> {
+                    HapticHelper.vibrateTick(v);
+                    showBiometricPrompt();
+                });
             } else {
                 btnBiometric.setVisibility(View.INVISIBLE);
             }
@@ -116,6 +125,7 @@ public class AppLockActivity extends AppCompatActivity {
         if (SecurityHelper.verifyPin(this, pin)) {
             unlockApp();
         } else {
+            HapticHelper.vibrateError(tvSubtitle);
             tvSubtitle.setText("Incorrect PIN. Please try again.");
             tvSubtitle.setTextColor(ContextCompat.getColor(this, R.color.expense_red));
             enteredPin.setLength(0);
@@ -124,6 +134,7 @@ public class AppLockActivity extends AppCompatActivity {
     }
 
     private void unlockApp() {
+        HapticHelper.vibrateConfirm(findViewById(android.R.id.content));
         SecurityHelper.setSessionUnlocked(true);
         finish();
     }
