@@ -31,13 +31,29 @@ public class AddWalletFragment extends BottomSheetDialogFragment {
 
     String selectedIcon = "ic_wallet";
     String selectedColor = WALLET_COLORS[0];
+    private int editWalletId = -1;
+    private double editWalletBalance = 0;
+
+    public static AddWalletFragment newInstanceForEdit(Wallet wallet) {
+        AddWalletFragment fragment = new AddWalletFragment();
+        Bundle args = new Bundle();
+        args.putInt("edit_id", wallet.getId());
+        args.putString("edit_name", wallet.getName());
+        args.putString("edit_icon", wallet.getIcon());
+        args.putString("edit_color", wallet.getColor());
+        args.putDouble("edit_balance", wallet.getBalance());
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_add_wallet, container, false);
 
+        TextView tvTitle = view.findViewById(R.id.tv_add_wallet_title);
         TextInputEditText etName = view.findViewById(R.id.et_wallet_name);
+        Button btnSave = view.findViewById(R.id.btn_save_wallet);
 
         // Icon selection
         int[] iconIds = {R.id.icon_wallet, R.id.icon_bank,
@@ -51,17 +67,35 @@ public class AddWalletFragment extends BottomSheetDialogFragment {
                     selectIcon(view, iconLayout, iconName, iconIds));
         }
 
-        // Select first icon by default
-        selectIcon(view, view.findViewById(R.id.icon_wallet),
-                "ic_wallet", iconIds);
+        selectedColor = WALLET_COLORS[0];
+        selectedIcon = "ic_wallet";
+
+        Bundle args = getArguments();
+        if (args != null && args.containsKey("edit_id")) {
+            editWalletId = args.getInt("edit_id", -1);
+            editWalletBalance = args.getDouble("edit_balance", 0);
+            String initName = args.getString("edit_name", "");
+            String initIcon = args.getString("edit_icon", "ic_wallet");
+            String initColor = args.getString("edit_color", WALLET_COLORS[0]);
+
+            etName.setText(initName);
+            selectedIcon = initIcon != null ? initIcon : "ic_wallet";
+            selectedColor = initColor != null ? initColor : WALLET_COLORS[0];
+            if (tvTitle != null) tvTitle.setText("Edit Wallet");
+            btnSave.setText("Save Changes");
+        }
+
+        int initialIconLayoutId = getIconLayoutId(selectedIcon);
+        LinearLayout initialIconView = view.findViewById(initialIconLayoutId);
+        if (initialIconView != null) {
+            selectIcon(view, initialIconView, selectedIcon, iconIds);
+        }
 
         // Color selection
         LinearLayout colorRow = view.findViewById(R.id.color_row);
-        selectedColor = WALLET_COLORS[0];
         setupColorSwatches(view, colorRow);
 
         // Save button
-        Button btnSave = view.findViewById(R.id.btn_save_wallet);
         btnSave.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
 
@@ -71,11 +105,19 @@ public class AddWalletFragment extends BottomSheetDialogFragment {
                 return;
             }
 
-            Wallet wallet = new Wallet(name, selectedIcon, selectedColor);
-
             WalletViewModel viewModel = new ViewModelProvider(requireActivity())
                     .get(WalletViewModel.class);
-            viewModel.insert(wallet);
+
+            if (editWalletId != -1) {
+                Wallet updated = new Wallet(name, selectedIcon, selectedColor);
+                updated.setId(editWalletId);
+                updated.setBalance(editWalletBalance);
+                viewModel.update(updated);
+                Toast.makeText(getContext(), "Wallet updated", Toast.LENGTH_SHORT).show();
+            } else {
+                Wallet wallet = new Wallet(name, selectedIcon, selectedColor);
+                viewModel.insert(wallet);
+            }
 
             dismiss();
         });

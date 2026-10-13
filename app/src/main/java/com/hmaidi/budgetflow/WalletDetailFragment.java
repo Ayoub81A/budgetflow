@@ -1,5 +1,6 @@
 package com.hmaidi.budgetflow;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -7,15 +8,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.ArrayList;
+import java.util.List;
 
 public class WalletDetailFragment extends BottomSheetDialogFragment {
 
     private Wallet wallet;
+    private List<Wallet> allWallets = new ArrayList<>();
 
     public static WalletDetailFragment newInstance(Wallet wallet) {
         WalletDetailFragment fragment = new WalletDetailFragment();
@@ -52,23 +56,11 @@ public class WalletDetailFragment extends BottomSheetDialogFragment {
         TextView tvExpense = view.findViewById(R.id.tv_wallet_expense);
         TextView tvNoTransactions = view.findViewById(R.id.tv_no_transactions);
         RecyclerView recyclerView = view.findViewById(R.id.rv_wallet_transactions);
+        View btnTransfer = view.findViewById(R.id.btn_wallet_detail_transfer);
+        View btnEdit = view.findViewById(R.id.btn_wallet_detail_edit);
+        View btnDelete = view.findViewById(R.id.btn_wallet_detail_delete);
 
-        // Set wallet info
-        tvName.setText(wallet.getName());
-        tvBalance.setText("Balance: " + CurrencyHelper.format(getContext(), wallet.getBalance()));
-
-        ivIcon.setImageResource(getIconResource(wallet.getIcon()));
-        ivIcon.setImageTintList(android.content.res.ColorStateList.valueOf(Color.WHITE));
-
-        try {
-            ivIcon.setBackgroundTintList(
-                    android.content.res.ColorStateList.valueOf(
-                            Color.parseColor(wallet.getColor())));
-        } catch (Exception e) {
-            ivIcon.setBackgroundTintList(
-                    android.content.res.ColorStateList.valueOf(
-                            Color.parseColor("#7B5EA7")));
-        }
+        bindWalletHeader(ivIcon, tvName, tvBalance, wallet);
 
         // Set up transactions list
         ExpenseAdapter adapter = new ExpenseAdapter(
@@ -80,9 +72,47 @@ public class WalletDetailFragment extends BottomSheetDialogFragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
 
-        // Observe transactions for this wallet
         WalletViewModel viewModel = new ViewModelProvider(requireActivity())
                 .get(WalletViewModel.class);
+
+        // Live-observe this wallet so balance/name/color updates immediately after edits or transfers
+        viewModel.getWalletById(wallet.getId()).observe(getViewLifecycleOwner(), liveWallet -> {
+            if (liveWallet != null) {
+                wallet = liveWallet;
+                bindWalletHeader(ivIcon, tvName, tvBalance, wallet);
+            }
+        });
+
+        viewModel.getAllWallets().observe(getViewLifecycleOwner(), wallets -> {
+            allWallets = wallets != null ? wallets : new ArrayList<>();
+        });
+
+        if (btnTransfer != null) {
+            btnTransfer.setOnClickListener(v ->
+                    WalletTransferDialogHelper.showTransferDialog(
+                            requireContext(), viewModel, allWallets, wallet.getId()));
+        }
+
+        if (btnEdit != null) {
+            btnEdit.setOnClickListener(v -> {
+                AddWalletFragment editSheet = AddWalletFragment.newInstanceForEdit(wallet);
+                editSheet.show(getParentFragmentManager(), "EditWallet");
+            });
+        }
+
+        if (btnDelete != null) {
+            btnDelete.setOnClickListener(v -> {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Delete Wallet")
+                        .setMessage("Delete \"" + wallet.getName() + "\"? This won't delete its transactions.")
+                        .setPositiveButton("Delete", (dialog, which) -> {
+                            viewModel.delete(wallet);
+                            dismiss();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            });
+        }
 
         viewModel.getExpensesByWallet(wallet.getId())
                 .observe(getViewLifecycleOwner(), expenses -> {
@@ -111,6 +141,21 @@ public class WalletDetailFragment extends BottomSheetDialogFragment {
                 });
 
         return view;
+    }
+
+    private void bindWalletHeader(ImageView ivIcon, TextView tvName, TextView tvBalance, Wallet w) {
+        if (getContext() == null || w == null) return;
+        tvName.setText(w.getName());
+        tvBalance.setText("Balance: " + CurrencyHelper.format(getContext(), w.getBalance()));
+
+        ivIcon.setImageResource(getIconResource(w.getIcon()));
+        ivIcon.setImageTintList(ColorStateList.valueOf(Color.WHITE));
+
+        try {
+            ivIcon.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(w.getColor())));
+        } catch (Exception e) {
+            ivIcon.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#10B981")));
+        }
     }
 
     private int getIconResource(String iconName) {

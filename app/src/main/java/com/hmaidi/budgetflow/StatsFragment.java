@@ -17,17 +17,27 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.google.android.material.button.MaterialButton;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -38,7 +48,19 @@ import java.util.Map;
 public class StatsFragment extends Fragment {
 
     private PieChart pieChart;
+    private BarChart barChart;
     private LinearLayout layoutChartLegend;
+    private MaterialButton btnToggleCategories, btnToggleTrends;
+    private LinearLayout layoutCategoriesView, layoutTrendsView;
+    private String currentChartMode = "category";
+
+    // Ratio & Metric Views (Option A + C)
+    private TextView tvTrendsIncomeRatio, tvTrendsExpenseRatio;
+    private View viewRatioIncome, viewRatioExpense;
+    private TextView tvTrendPeakAmount, tvTrendPeakPeriod;
+    private TextView tvTrendDailyAvg, tvTrendDailyAvgSub;
+    private TextView tvTrendNetSaved, tvTrendSavingsRate;
+
     private TextView tvIncome, tvExpense, tvBalance;
     private ExpenseViewModel viewModel;
     private Button btnRangeWeek, btnRangeMonth, btnRangeYear, btnRangeAll;
@@ -54,10 +76,30 @@ public class StatsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_stats, container, false);
 
         pieChart = view.findViewById(R.id.pie_chart);
+        barChart = view.findViewById(R.id.bar_chart);
         layoutChartLegend = view.findViewById(R.id.layout_chart_legend);
         tvIncome = view.findViewById(R.id.tv_stats_income);
         tvExpense = view.findViewById(R.id.tv_stats_expense);
         tvBalance = view.findViewById(R.id.tv_stats_balance);
+
+        btnToggleCategories = view.findViewById(R.id.btn_toggle_categories);
+        btnToggleTrends = view.findViewById(R.id.btn_toggle_trends);
+        layoutCategoriesView = view.findViewById(R.id.layout_categories_view);
+        layoutTrendsView = view.findViewById(R.id.layout_trends_view);
+
+        btnToggleCategories.setOnClickListener(v -> setChartMode("category"));
+        btnToggleTrends.setOnClickListener(v -> setChartMode("trends"));
+
+        tvTrendsIncomeRatio = view.findViewById(R.id.tv_trends_income_ratio);
+        tvTrendsExpenseRatio = view.findViewById(R.id.tv_trends_expense_ratio);
+        viewRatioIncome = view.findViewById(R.id.view_ratio_income);
+        viewRatioExpense = view.findViewById(R.id.view_ratio_expense);
+        tvTrendPeakAmount = view.findViewById(R.id.tv_trend_peak_amount);
+        tvTrendPeakPeriod = view.findViewById(R.id.tv_trend_peak_period);
+        tvTrendDailyAvg = view.findViewById(R.id.tv_trend_daily_avg);
+        tvTrendDailyAvgSub = view.findViewById(R.id.tv_trend_daily_avg_sub);
+        tvTrendNetSaved = view.findViewById(R.id.tv_trend_net_saved);
+        tvTrendSavingsRate = view.findViewById(R.id.tv_trend_savings_rate);
 
         btnRangeWeek = view.findViewById(R.id.btn_range_week);
         btnRangeMonth = view.findViewById(R.id.btn_range_month);
@@ -81,6 +123,39 @@ public class StatsFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private void setChartMode(String mode) {
+        if (getContext() == null) return;
+        currentChartMode = mode;
+        int activeBg = ContextCompat.getColor(requireContext(), R.color.purple_main);
+        int inactiveBg = ContextCompat.getColor(requireContext(), R.color.input_bg);
+        int activeText = Color.WHITE;
+        int inactiveText = ContextCompat.getColor(requireContext(), R.color.text_secondary);
+
+        if ("category".equals(mode)) {
+            layoutCategoriesView.setVisibility(View.VISIBLE);
+            layoutTrendsView.setVisibility(View.GONE);
+
+            btnToggleCategories.setBackgroundTintList(ColorStateList.valueOf(activeBg));
+            btnToggleCategories.setTextColor(activeText);
+
+            btnToggleTrends.setBackgroundTintList(ColorStateList.valueOf(inactiveBg));
+            btnToggleTrends.setTextColor(inactiveText);
+        } else {
+            layoutCategoriesView.setVisibility(View.GONE);
+            layoutTrendsView.setVisibility(View.VISIBLE);
+
+            btnToggleTrends.setBackgroundTintList(ColorStateList.valueOf(activeBg));
+            btnToggleTrends.setTextColor(activeText);
+
+            btnToggleCategories.setBackgroundTintList(ColorStateList.valueOf(inactiveBg));
+            btnToggleCategories.setTextColor(inactiveText);
+
+            if (barChart != null && barChart.getData() != null) {
+                barChart.animateY(500);
+            }
+        }
     }
 
     private void selectRange(String range) {
@@ -111,6 +186,9 @@ public class StatsFragment extends Fragment {
         List<ExpenseModel> expenseOnly = new ArrayList<>();
 
         for (ExpenseModel item : filtered) {
+            if ("Transfer".equalsIgnoreCase(item.getCategory())) {
+                continue;
+            }
             if (item.isExpense()) {
                 periodExpense += item.getAmount();
                 expenseOnly.add(item);
@@ -131,6 +209,7 @@ public class StatsFragment extends Fragment {
         }
 
         buildPieChart(expenseOnly);
+        buildBarChart(filtered, periodIncome, periodExpense);
     }
 
     private List<ExpenseModel> filterExpensesByRange(List<ExpenseModel> list, String range) {
@@ -452,5 +531,408 @@ public class StatsFragment extends Fragment {
 
         pieChart.setCenterText(spannable);
         pieChart.setCenterTextSize(13f);
+    }
+
+    private void buildBarChart(List<ExpenseModel> transactions, double periodIncome, double periodExpense) {
+        if (getContext() == null || barChart == null) return;
+
+        List<String> labels = new ArrayList<>();
+        List<Double> incomeList = new ArrayList<>();
+        List<Double> expenseList = new ArrayList<>();
+
+        Calendar now = Calendar.getInstance();
+        int currentYear = now.get(Calendar.YEAR);
+        int currentMonth = now.get(Calendar.MONTH) + 1;
+
+        if ("week".equals(selectedRange)) {
+            Calendar startOfWeek = Calendar.getInstance();
+            startOfWeek.setFirstDayOfWeek(Calendar.MONDAY);
+            startOfWeek.set(Calendar.DAY_OF_WEEK, startOfWeek.getFirstDayOfWeek());
+            startOfWeek.set(Calendar.HOUR_OF_DAY, 0);
+            startOfWeek.set(Calendar.MINUTE, 0);
+            startOfWeek.set(Calendar.SECOND, 0);
+            startOfWeek.set(Calendar.MILLISECOND, 0);
+
+            String[] dayNames = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+            for (int i = 0; i < 7; i++) {
+                labels.add(dayNames[i]);
+                Calendar dayCal = (Calendar) startOfWeek.clone();
+                dayCal.add(Calendar.DAY_OF_YEAR, i);
+                int targetD = dayCal.get(Calendar.DAY_OF_MONTH);
+                int targetM = dayCal.get(Calendar.MONTH) + 1;
+                int targetY = dayCal.get(Calendar.YEAR);
+
+                double dayInc = 0;
+                double dayExp = 0;
+                for (ExpenseModel item : transactions) {
+                    if ("Transfer".equalsIgnoreCase(item.getCategory())) continue;
+                    String dStr = item.getDate();
+                    if (dStr == null) continue;
+                    String[] parts = dStr.trim().split("/");
+                    if (parts.length != 3) continue;
+                    try {
+                        int d = Integer.parseInt(parts[0]);
+                        int m = Integer.parseInt(parts[1]);
+                        int y = Integer.parseInt(parts[2]);
+                        if (d == targetD && m == targetM && y == targetY) {
+                            if (item.isExpense()) {
+                                dayExp += item.getAmount();
+                            } else {
+                                dayInc += item.getAmount();
+                            }
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                incomeList.add(dayInc);
+                expenseList.add(dayExp);
+            }
+        } else if ("month".equals(selectedRange)) {
+            int maxDaysInMonth = now.getActualMaximum(Calendar.DAY_OF_MONTH);
+            int groupCount = (maxDaysInMonth > 28) ? 5 : 4;
+            String[] weekLabels = {"W1", "W2", "W3", "W4", "W5"};
+
+            for (int i = 0; i < groupCount; i++) {
+                labels.add(weekLabels[i]);
+                int startDay = i * 7 + 1;
+                int endDay = (i == 4) ? maxDaysInMonth : Math.min((i + 1) * 7, maxDaysInMonth);
+
+                double wInc = 0;
+                double wExp = 0;
+                for (ExpenseModel item : transactions) {
+                    if ("Transfer".equalsIgnoreCase(item.getCategory())) continue;
+                    String dStr = item.getDate();
+                    if (dStr == null) continue;
+                    String[] parts = dStr.trim().split("/");
+                    if (parts.length != 3) continue;
+                    try {
+                        int d = Integer.parseInt(parts[0]);
+                        int m = Integer.parseInt(parts[1]);
+                        int y = Integer.parseInt(parts[2]);
+                        if (y == currentYear && m == currentMonth && d >= startDay && d <= endDay) {
+                            if (item.isExpense()) {
+                                wExp += item.getAmount();
+                            } else {
+                                wInc += item.getAmount();
+                            }
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                incomeList.add(wInc);
+                expenseList.add(wExp);
+            }
+        } else if ("year".equals(selectedRange)) {
+            String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+            for (int i = 0; i < 12; i++) {
+                labels.add(monthNames[i]);
+                int targetMonth = i + 1;
+
+                double mInc = 0;
+                double mExp = 0;
+                for (ExpenseModel item : transactions) {
+                    if ("Transfer".equalsIgnoreCase(item.getCategory())) continue;
+                    String dStr = item.getDate();
+                    if (dStr == null) continue;
+                    String[] parts = dStr.trim().split("/");
+                    if (parts.length != 3) continue;
+                    try {
+                        int d = Integer.parseInt(parts[0]);
+                        int m = Integer.parseInt(parts[1]);
+                        int y = Integer.parseInt(parts[2]);
+                        if (y == currentYear && m == targetMonth) {
+                            if (item.isExpense()) {
+                                mExp += item.getAmount();
+                            } else {
+                                mInc += item.getAmount();
+                            }
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                incomeList.add(mInc);
+                expenseList.add(mExp);
+            }
+        } else {
+            java.util.TreeSet<Integer> yearsSet = new java.util.TreeSet<>();
+            for (ExpenseModel item : transactions) {
+                if ("Transfer".equalsIgnoreCase(item.getCategory())) continue;
+                String dStr = item.getDate();
+                if (dStr == null) continue;
+                String[] parts = dStr.trim().split("/");
+                if (parts.length == 3) {
+                    try {
+                        yearsSet.add(Integer.parseInt(parts[2]));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+            if (yearsSet.isEmpty()) {
+                yearsSet.add(currentYear);
+            }
+            if (yearsSet.size() == 1) {
+                int singleYear = yearsSet.first();
+                String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+                for (int i = 0; i < 12; i++) {
+                    labels.add(monthNames[i]);
+                    int targetMonth = i + 1;
+                    double mInc = 0;
+                    double mExp = 0;
+                    for (ExpenseModel item : transactions) {
+                        if ("Transfer".equalsIgnoreCase(item.getCategory())) continue;
+                        String dStr = item.getDate();
+                        if (dStr == null) continue;
+                        String[] parts = dStr.trim().split("/");
+                        if (parts.length == 3) {
+                            try {
+                                int m = Integer.parseInt(parts[1]);
+                                int y = Integer.parseInt(parts[2]);
+                                if (y == singleYear && m == targetMonth) {
+                                    if (item.isExpense()) mExp += item.getAmount();
+                                    else mInc += item.getAmount();
+                                }
+                            } catch (NumberFormatException ignored) {}
+                        }
+                    }
+                    incomeList.add(mInc);
+                    expenseList.add(mExp);
+                }
+            } else {
+                for (int y : yearsSet) {
+                    labels.add(String.valueOf(y));
+                    double yInc = 0;
+                    double yExp = 0;
+                    for (ExpenseModel item : transactions) {
+                        if ("Transfer".equalsIgnoreCase(item.getCategory())) continue;
+                        String dStr = item.getDate();
+                        if (dStr == null) continue;
+                        String[] parts = dStr.trim().split("/");
+                        if (parts.length == 3) {
+                            try {
+                                if (Integer.parseInt(parts[2]) == y) {
+                                    if (item.isExpense()) yExp += item.getAmount();
+                                    else yInc += item.getAmount();
+                                }
+                            } catch (NumberFormatException ignored) {}
+                        }
+                    }
+                    incomeList.add(yInc);
+                    expenseList.add(yExp);
+                }
+            }
+        }
+
+        boolean hasData = false;
+        for (int i = 0; i < incomeList.size(); i++) {
+            if (incomeList.get(i) > 0 || expenseList.get(i) > 0) {
+                hasData = true;
+                break;
+            }
+        }
+
+        if (!hasData) {
+            barChart.clear();
+            barChart.setNoDataText("No transactions in this period");
+            barChart.setNoDataTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+            barChart.invalidate();
+            updateTrendMetricsAndRatio(0, 0, labels, expenseList, now);
+            return;
+        }
+
+        int groupCount = labels.size();
+        List<BarEntry> incomeEntries = new ArrayList<>();
+        List<BarEntry> expenseEntries = new ArrayList<>();
+        for (int i = 0; i < groupCount; i++) {
+            incomeEntries.add(new BarEntry(i, incomeList.get(i).floatValue()));
+            expenseEntries.add(new BarEntry(i, expenseList.get(i).floatValue()));
+        }
+
+        BarDataSet setIncome = new BarDataSet(incomeEntries, "Income");
+        setIncome.setColor(ContextCompat.getColor(requireContext(), R.color.income_green));
+        setIncome.setDrawValues(false);
+
+        BarDataSet setExpense = new BarDataSet(expenseEntries, "Expenses");
+        setExpense.setColor(ContextCompat.getColor(requireContext(), R.color.expense_red));
+        setExpense.setDrawValues(false);
+
+        BarData barData = new BarData(setIncome, setExpense);
+        float barWidth = 0.32f;
+        float barSpace = 0.04f;
+        float groupSpace = 0.28f;
+        barData.setBarWidth(barWidth);
+
+        barChart.setData(barData);
+
+        XAxis xAxis = barChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
+        xAxis.setCenterAxisLabels(true);
+        xAxis.setGranularity(1f);
+        xAxis.setGranularityEnabled(true);
+        xAxis.setAxisMinimum(0f);
+        xAxis.setAxisMaximum(groupCount);
+        xAxis.setLabelCount(groupCount, false);
+        xAxis.setDrawGridLines(false);
+        xAxis.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        xAxis.setTextSize(11f);
+
+        YAxis leftAxis = barChart.getAxisLeft();
+        leftAxis.setAxisMinimum(0f);
+        leftAxis.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        leftAxis.setTextSize(10f);
+        leftAxis.setGridColor(ContextCompat.getColor(requireContext(), R.color.border_subtle));
+        leftAxis.setDrawZeroLine(true);
+        leftAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                if (value >= 1000) {
+                    return String.format(Locale.US, "%.1fk", value / 1000f);
+                }
+                return String.format(Locale.US, "%.0f", value);
+            }
+        });
+
+        barChart.getAxisRight().setEnabled(false);
+        barChart.getDescription().setEnabled(false);
+        barChart.setDrawGridBackground(false);
+        barChart.setDrawBarShadow(false);
+
+        Legend legend = barChart.getLegend();
+        legend.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
+        legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
+        legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
+        legend.setDrawInside(false);
+        legend.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        legend.setTextSize(11f);
+        legend.setForm(Legend.LegendForm.CIRCLE);
+        legend.setFormSize(8f);
+        legend.setXEntrySpace(14f);
+
+        barChart.setTouchEnabled(true);
+        barChart.setDragEnabled(false);
+        barChart.setScaleEnabled(false);
+        barChart.setPinchZoom(false);
+        barChart.setDoubleTapToZoomEnabled(false);
+
+        final List<String> finalLabels = labels;
+        barChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(Entry e, Highlight h) {
+                int groupIdx = (int) Math.floor(e.getX());
+                if (groupIdx >= 0 && groupIdx < finalLabels.size()) {
+                    String label = finalLabels.get(groupIdx);
+                    String type = (h.getDataSetIndex() == 0) ? "Income" : "Expense";
+                    String msg = label + " " + type + ": " + CurrencyHelper.format(getContext(), e.getY());
+                    Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onNothingSelected() {}
+        });
+
+        barChart.groupBars(0f, groupSpace, barSpace);
+        barChart.animateY(600);
+        barChart.invalidate();
+
+        updateTrendMetricsAndRatio(periodIncome, periodExpense, labels, expenseList, now);
+    }
+
+    private void updateTrendMetricsAndRatio(double periodIncome, double periodExpense,
+                                            List<String> labels, List<Double> expenseList, Calendar now) {
+        if (getContext() == null || tvTrendsIncomeRatio == null) return;
+
+        // 1. Ratio Bar calculation
+        double totalFlow = periodIncome + periodExpense;
+        if (totalFlow > 0) {
+            float incPct = (float) ((periodIncome / totalFlow) * 100.0);
+            float expPct = (float) ((periodExpense / totalFlow) * 100.0);
+            tvTrendsIncomeRatio.setText(String.format(Locale.US, "Income: %.0f%% (+%s)", incPct, CurrencyHelper.format(getContext(), periodIncome)));
+            tvTrendsExpenseRatio.setText(String.format(Locale.US, "Expense: %.0f%% (-%s)", expPct, CurrencyHelper.format(getContext(), periodExpense)));
+
+            if (incPct <= 0) {
+                viewRatioIncome.setVisibility(View.GONE);
+            } else {
+                viewRatioIncome.setVisibility(View.VISIBLE);
+                LinearLayout.LayoutParams incParams = (LinearLayout.LayoutParams) viewRatioIncome.getLayoutParams();
+                incParams.weight = incPct;
+                viewRatioIncome.setLayoutParams(incParams);
+            }
+
+            if (expPct <= 0) {
+                viewRatioExpense.setVisibility(View.GONE);
+            } else {
+                viewRatioExpense.setVisibility(View.VISIBLE);
+                LinearLayout.LayoutParams expParams = (LinearLayout.LayoutParams) viewRatioExpense.getLayoutParams();
+                expParams.weight = expPct;
+                viewRatioExpense.setLayoutParams(expParams);
+            }
+        } else {
+            tvTrendsIncomeRatio.setText("Income: 0%");
+            tvTrendsExpenseRatio.setText("Expense: 0%");
+            viewRatioIncome.setVisibility(View.VISIBLE);
+            viewRatioExpense.setVisibility(View.VISIBLE);
+            LinearLayout.LayoutParams incParams = (LinearLayout.LayoutParams) viewRatioIncome.getLayoutParams();
+            incParams.weight = 50f;
+            viewRatioIncome.setLayoutParams(incParams);
+            LinearLayout.LayoutParams expParams = (LinearLayout.LayoutParams) viewRatioExpense.getLayoutParams();
+            expParams.weight = 50f;
+            viewRatioExpense.setLayoutParams(expParams);
+        }
+
+        // 2. Peak Expense Tile
+        double maxExpenseVal = 0;
+        String maxExpensePeriod = "None";
+        if (expenseList != null && labels != null) {
+            for (int i = 0; i < expenseList.size(); i++) {
+                if (expenseList.get(i) > maxExpenseVal) {
+                    maxExpenseVal = expenseList.get(i);
+                    maxExpensePeriod = (i < labels.size()) ? labels.get(i) : "P" + (i + 1);
+                }
+            }
+        }
+        if (maxExpenseVal > 0) {
+            tvTrendPeakAmount.setText("-" + CurrencyHelper.format(getContext(), maxExpenseVal));
+            tvTrendPeakPeriod.setText(maxExpensePeriod);
+        } else {
+            tvTrendPeakAmount.setText(CurrencyHelper.format(getContext(), 0));
+            tvTrendPeakPeriod.setText("None");
+        }
+
+        // 3. Daily Average Tile
+        int daysCount = 7;
+        String avgSub = "per day";
+        if ("week".equals(selectedRange)) {
+            daysCount = 7;
+            avgSub = "per day";
+        } else if ("month".equals(selectedRange)) {
+            daysCount = now.get(Calendar.DAY_OF_MONTH);
+            if (daysCount < 1) daysCount = 1;
+            avgSub = "per day";
+        } else if ("year".equals(selectedRange)) {
+            int currentDayOfYear = now.get(Calendar.DAY_OF_YEAR);
+            daysCount = Math.max(1, currentDayOfYear);
+            avgSub = "per day";
+        } else {
+            daysCount = 30;
+            avgSub = "monthly avg";
+        }
+        double dailyAvg = (daysCount > 0) ? (periodExpense / daysCount) : 0;
+        tvTrendDailyAvg.setText(CurrencyHelper.format(getContext(), dailyAvg));
+        tvTrendDailyAvgSub.setText(avgSub);
+
+        // 4. Net Saved / Rate Tile
+        double net = periodIncome - periodExpense;
+        tvTrendNetSaved.setText((net >= 0 ? "+" : "-") + CurrencyHelper.format(getContext(), Math.abs(net)));
+        int netColor = ContextCompat.getColor(requireContext(), net >= 0 ? R.color.income_green : R.color.expense_red);
+        tvTrendNetSaved.setTextColor(netColor);
+
+        if (periodIncome > 0 && net > 0) {
+            double rate = (net / periodIncome) * 100.0;
+            tvTrendSavingsRate.setText(String.format(Locale.US, "%.1f%% saved", rate));
+            tvTrendSavingsRate.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_green));
+        } else if (net < 0) {
+            tvTrendSavingsRate.setText("Deficit");
+            tvTrendSavingsRate.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_red));
+        } else {
+            tvTrendSavingsRate.setText("0% saved");
+            tvTrendSavingsRate.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        }
     }
 }

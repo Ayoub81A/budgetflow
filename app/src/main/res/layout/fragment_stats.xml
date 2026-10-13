@@ -82,7 +82,7 @@
             </LinearLayout>
         </HorizontalScrollView>
 
-        <!-- Pie Chart Card -->
+        <!-- Unified Chart Card with Segmented Toggle -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -96,26 +96,308 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:text="Spending by Category"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"/>
-
-                <com.github.mikephil.charting.charts.PieChart
-                    android:id="@+id/pie_chart"
+                <!-- Segmented Switch Pill (By Category vs Spending Trends) -->
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
-                    android:layout_height="250dp"/>
+                    android:layout_height="44dp"
+                    app:cardCornerRadius="14dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    app:cardElevation="0dp"
+                    app:cardPreventCornerOverlap="false"
+                    android:clipToOutline="true"
+                    android:layout_marginBottom="16dp">
 
+                    <LinearLayout
+                        android:id="@+id/layout_chart_segmented_toggle"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:padding="3dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_toggle_categories"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="By Category"
+                            android:textAllCaps="false"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white"
+                            app:backgroundTint="@color/purple_main"
+                            app:cornerRadius="11dp"
+                            app:elevation="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_toggle_trends"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="Spending Trends"
+                            android:textAllCaps="false"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_secondary"
+                            app:backgroundTint="@color/input_bg"
+                            app:cornerRadius="11dp"
+                            app:elevation="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Category View Container -->
                 <LinearLayout
-                    android:id="@+id/layout_chart_legend"
+                    android:id="@+id/layout_categories_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginTop="12dp"/>
+                    android:visibility="visible">
+
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/pie_chart"
+                        android:layout_width="match_parent"
+                        android:layout_height="250dp"/>
+
+                    <LinearLayout
+                        android:id="@+id/layout_chart_legend"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="12dp"/>
+                </LinearLayout>
+
+                <!-- Trends Bar Chart View Container -->
+                <LinearLayout
+                    android:id="@+id/layout_trends_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.github.mikephil.charting.charts.BarChart
+                        android:id="@+id/bar_chart"
+                        android:layout_width="match_parent"
+                        android:layout_height="210dp"/>
+
+                    <!-- Income vs Expense Ratio Section (Option C) -->
+                    <LinearLayout
+                        android:id="@+id/layout_trends_ratio_section"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="14dp"
+                        android:layout_marginBottom="14dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="6dp">
+
+                            <TextView
+                                android:id="@+id/tv_trends_income_ratio"
+                                android:text="Income: 0%"
+                                android:textColor="@color/income_green"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"/>
+
+                            <TextView
+                                android:id="@+id/tv_trends_expense_ratio"
+                                android:text="Expense: 0%"
+                                android:textColor="@color/expense_red"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+                        </LinearLayout>
+
+                        <!-- Dual-tone Ratio Bar -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            app:cardCornerRadius="4dp"
+                            app:cardBackgroundColor="@color/input_bg"
+                            app:cardElevation="0dp"
+                            app:cardPreventCornerOverlap="false"
+                            android:clipToOutline="true">
+
+                            <LinearLayout
+                                android:id="@+id/layout_ratio_bar_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="horizontal"
+                                android:weightSum="100">
+
+                                <View
+                                    android:id="@+id/view_ratio_income"
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="50"
+                                    android:background="@color/income_green"/>
+
+                                <View
+                                    android:id="@+id/view_ratio_expense"
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="50"
+                                    android:background="@color/expense_red"/>
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+                    </LinearLayout>
+
+                    <!-- Key Trend Insight Metric Tiles (Option A) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:weightSum="3">
+
+                        <!-- Tile 1: Peak Expense -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            app:cardCornerRadius="14dp"
+                            app:cardBackgroundColor="@color/bg_dark"
+                            app:cardElevation="0dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="10dp">
+
+                                <TextView
+                                    android:text="Peak Exp."
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+
+                                <TextView
+                                    android:id="@+id/tv_trend_peak_amount"
+                                    android:text="$0.00"
+                                    android:textColor="@color/expense_red"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="3dp"/>
+
+                                <TextView
+                                    android:id="@+id/tv_trend_peak_period"
+                                    android:text="None"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="10sp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"/>
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Tile 2: Daily Average -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            app:cardCornerRadius="14dp"
+                            app:cardBackgroundColor="@color/bg_dark"
+                            app:cardElevation="0dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="10dp">
+
+                                <TextView
+                                    android:text="Daily Avg."
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+
+                                <TextView
+                                    android:id="@+id/tv_trend_daily_avg"
+                                    android:text="$0.00"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="3dp"/>
+
+                                <TextView
+                                    android:id="@+id/tv_trend_daily_avg_sub"
+                                    android:text="per day"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="10sp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"/>
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Tile 3: Net Saved / Rate -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:cardCornerRadius="14dp"
+                            app:cardBackgroundColor="@color/bg_dark"
+                            app:cardElevation="0dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="10dp">
+
+                                <TextView
+                                    android:text="Net Saved"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+
+                                <TextView
+                                    android:id="@+id/tv_trend_net_saved"
+                                    android:text="$0.00"
+                                    android:textColor="@color/income_green"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="3dp"/>
+
+                                <TextView
+                                    android:id="@+id/tv_trend_savings_rate"
+                                    android:text="0% rate"
+                                    android:textColor="@color/income_green"
+                                    android:textSize="10sp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"/>
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+                    </LinearLayout>
+
+                </LinearLayout>
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>

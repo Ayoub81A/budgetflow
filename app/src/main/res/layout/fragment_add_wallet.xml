@@ -17,6 +17,7 @@
 
     <!-- Title -->
     <TextView
+        android:id="@+id/tv_add_wallet_title"
         android:text="New Wallet"
         android:textColor="@color/text_primary"
         android:textSize="20sp"

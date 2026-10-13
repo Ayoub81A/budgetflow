@@ -23,10 +23,10 @@ public interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE walletId = :walletId AND isDeleted = 0 ORDER BY id DESC")
     LiveData<List<ExpenseModel>> getExpensesByWallet(int walletId);
 
-    @Query("SELECT SUM(amount) FROM expenses WHERE isExpense = 1 AND isDeleted = 0")
+    @Query("SELECT SUM(amount) FROM expenses WHERE isExpense = 1 AND isDeleted = 0 AND category != 'Transfer'")
     LiveData<Double> getTotalExpenses();
 
-    @Query("SELECT SUM(amount) FROM expenses WHERE isExpense = 0 AND isDeleted = 0")
+    @Query("SELECT SUM(amount) FROM expenses WHERE isExpense = 0 AND isDeleted = 0 AND category != 'Transfer'")
     LiveData<Double> getTotalIncome();
 
     @Query("SELECT SUM(amount) FROM expenses WHERE walletId = :walletId AND isExpense = 0 AND isDeleted = 0")

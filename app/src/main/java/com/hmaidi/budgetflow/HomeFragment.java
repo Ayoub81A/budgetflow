@@ -21,7 +21,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class HomeFragment extends Fragment {
 
@@ -39,6 +43,14 @@ public class HomeFragment extends Fragment {
     private TextView tvBudgetPercent, tvBudgetSpentInfo, tvBudgetRemaining;
     private ProgressBar pbBudget;
     private List<ExpenseModel> currentExpensesList = new ArrayList<>();
+
+    // Category Budgets
+    private CategoryBudgetViewModel categoryBudgetViewModel;
+    private CategoryViewModel categoryViewModel;
+    private CardView cardCategoryBudgetEmpty;
+    private LinearLayout layoutCategoryBudgetItems;
+    private List<CategoryBudget> currentCategoryBudgets = new ArrayList<>();
+    private List<CategoryModel> availableCategories = new ArrayList<>();
 
     // Savings Goals
     private RecyclerView rvSavingsGoals;
@@ -80,6 +92,18 @@ public class HomeFragment extends Fragment {
         pbBudget = view.findViewById(R.id.pb_budget);
 
         cardBudgetTracker.setOnClickListener(v -> showBudgetDialog());
+
+        // Category Budgets Setup
+        cardCategoryBudgetEmpty = view.findViewById(R.id.card_category_budget_empty);
+        layoutCategoryBudgetItems = view.findViewById(R.id.layout_category_budget_items);
+        TextView tvManageCategoryBudgets = view.findViewById(R.id.tv_manage_category_budgets);
+
+        if (cardCategoryBudgetEmpty != null) {
+            cardCategoryBudgetEmpty.setOnClickListener(v -> showManageCategoryBudgetsDialog());
+        }
+        if (tvManageCategoryBudgets != null) {
+            tvManageCategoryBudgets.setOnClickListener(v -> showManageCategoryBudgetsDialog());
+        }
 
         // Dynamic greeting
         TextView tvGreeting = view.findViewById(R.id.tv_greeting);
@@ -131,6 +155,7 @@ public class HomeFragment extends Fragment {
                 emptyState.setVisibility(View.GONE);
             }
             updateBudgetProgress();
+            updateCategoryBudgets();
         });
 
         // Observe total expenses
@@ -159,6 +184,18 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        // Observe Category Budgets
+        categoryBudgetViewModel = new ViewModelProvider(requireActivity()).get(CategoryBudgetViewModel.class);
+        categoryBudgetViewModel.getAllCategoryBudgets().observe(getViewLifecycleOwner(), budgets -> {
+            currentCategoryBudgets = budgets != null ? budgets : new ArrayList<>();
+            updateCategoryBudgets();
+        });
+
+        categoryViewModel = new ViewModelProvider(requireActivity()).get(CategoryViewModel.class);
+        categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), categories -> {
+            availableCategories = categories != null ? categories : new ArrayList<>();
+        });
+
         return view;
     }
 
@@ -166,6 +203,7 @@ public class HomeFragment extends Fragment {
     public void onResume() {
         super.onResume();
         updateBudgetProgress();
+        updateCategoryBudgets();
     }
 
     private void updateBalance() {
@@ -228,7 +266,9 @@ public class HomeFragment extends Fragment {
 
         double sum = 0;
         for (ExpenseModel e : expenses) {
-            if (e.isExpense() && isDateInMonth(e.getDate(), currentMonth, currentYear)) {
+            if (e.isExpense()
+                    && !"Transfer".equalsIgnoreCase(e.getCategory())
+                    && isDateInMonth(e.getDate(), currentMonth, currentYear)) {
                 sum += e.getAmount();
             }
         }
@@ -420,5 +460,244 @@ public class HomeFragment extends Fragment {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void updateCategoryBudgets() {
+        if (getContext() == null || layoutCategoryBudgetItems == null || cardCategoryBudgetEmpty == null) return;
+        layoutCategoryBudgetItems.removeAllViews();
+
+        if (currentCategoryBudgets.isEmpty()) {
+            cardCategoryBudgetEmpty.setVisibility(View.VISIBLE);
+            layoutCategoryBudgetItems.setVisibility(View.GONE);
+            return;
+        }
+
+        cardCategoryBudgetEmpty.setVisibility(View.GONE);
+        layoutCategoryBudgetItems.setVisibility(View.VISIBLE);
+
+        Calendar now = Calendar.getInstance();
+        int currentMonth = now.get(Calendar.MONTH) + 1;
+        int currentYear = now.get(Calendar.YEAR);
+
+        Map<String, Double> spentMap = new HashMap<>();
+        for (ExpenseModel e : currentExpensesList) {
+            if (e.isExpense()
+                    && !"Transfer".equalsIgnoreCase(e.getCategory())
+                    && isDateInMonth(e.getDate(), currentMonth, currentYear)) {
+                String cat = e.getCategory() != null ? e.getCategory() : "Uncategorized";
+                spentMap.put(cat, spentMap.getOrDefault(cat, 0.0) + e.getAmount());
+            }
+        }
+
+        float density = getResources().getDisplayMetrics().density;
+
+        for (CategoryBudget cb : currentCategoryBudgets) {
+            double spent = spentMap.getOrDefault(cb.getCategoryName(), 0.0);
+            double limit = cb.getMonthlyLimit();
+            int percent = limit > 0 ? (int) Math.round((spent / limit) * 100) : 0;
+            double remaining = limit - spent;
+
+            CardView card = new CardView(requireContext());
+            LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            cardParams.bottomMargin = (int) (10 * density);
+            card.setLayoutParams(cardParams);
+            card.setRadius(16 * density);
+            card.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.card_dark));
+            card.setCardElevation(0f);
+            card.setClickable(true);
+            card.setFocusable(true);
+
+            android.util.TypedValue outValue = new android.util.TypedValue();
+            requireContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+            card.setForeground(ContextCompat.getDrawable(requireContext(), outValue.resourceId));
+
+            card.setOnClickListener(v -> showSetCategoryBudgetDialog(cb.getCategoryName(), cb.getMonthlyLimit()));
+
+            LinearLayout inner = new LinearLayout(requireContext());
+            inner.setOrientation(LinearLayout.VERTICAL);
+            int pad = (int) (14 * density);
+            inner.setPadding(pad, pad, pad, pad);
+
+            // Top row: Category name & percentage badge
+            LinearLayout topRow = new LinearLayout(requireContext());
+            topRow.setOrientation(LinearLayout.HORIZONTAL);
+            topRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+            TextView tvName = new TextView(requireContext());
+            tvName.setText(cb.getCategoryName());
+            tvName.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+            tvName.setTextSize(14f);
+            tvName.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            tvName.setLayoutParams(nameParams);
+
+            TextView tvPct = new TextView(requireContext());
+            tvPct.setText(percent + "%");
+            tvPct.setTextSize(13f);
+            tvPct.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+
+            int statusColor;
+            if (percent >= 100) {
+                statusColor = ContextCompat.getColor(requireContext(), R.color.expense_red);
+            } else if (percent >= 75) {
+                statusColor = Color.parseColor("#F59E0B");
+            } else {
+                statusColor = ContextCompat.getColor(requireContext(), R.color.income_green);
+            }
+            tvPct.setTextColor(statusColor);
+
+            topRow.addView(tvName);
+            topRow.addView(tvPct);
+
+            // Progress bar
+            ProgressBar pb = new ProgressBar(requireContext(), null, android.R.attr.progressBarStyleHorizontal);
+            LinearLayout.LayoutParams pbParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, (int) (8 * density));
+            pbParams.topMargin = (int) (8 * density);
+            pbParams.bottomMargin = (int) (8 * density);
+            pb.setLayoutParams(pbParams);
+            pb.setMax(100);
+            pb.setProgress(Math.min(100, Math.max(0, percent)));
+            pb.setProgressTintList(ColorStateList.valueOf(statusColor));
+            pb.setProgressBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.input_bg)));
+
+            // Bottom info row: Spent vs limit + left/exceeded
+            LinearLayout bottomRow = new LinearLayout(requireContext());
+            bottomRow.setOrientation(LinearLayout.HORIZONTAL);
+            bottomRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+            TextView tvSpent = new TextView(requireContext());
+            tvSpent.setText("Spent: " + CurrencyHelper.format(getContext(), spent) + " / " + CurrencyHelper.format(getContext(), limit));
+            tvSpent.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+            tvSpent.setTextSize(12f);
+            LinearLayout.LayoutParams spentParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            tvSpent.setLayoutParams(spentParams);
+
+            TextView tvRem = new TextView(requireContext());
+            if (remaining >= 0) {
+                tvRem.setText(CurrencyHelper.format(getContext(), remaining) + " left");
+                tvRem.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_green));
+            } else {
+                tvRem.setText("Over by " + CurrencyHelper.format(getContext(), Math.abs(remaining)));
+                tvRem.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_red));
+            }
+            tvRem.setTextSize(12f);
+            tvRem.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+
+            bottomRow.addView(tvSpent);
+            bottomRow.addView(tvRem);
+
+            inner.addView(topRow);
+            inner.addView(pb);
+            inner.addView(bottomRow);
+            card.addView(inner);
+
+            layoutCategoryBudgetItems.addView(card);
+        }
+    }
+
+    private void showManageCategoryBudgetsDialog() {
+        if (getContext() == null) return;
+
+        Set<String> categorySet = new LinkedHashSet<>();
+
+        // Add from current expense categories in DB
+        if (availableCategories != null) {
+            for (CategoryModel c : availableCategories) {
+                if (c.isExpense() && c.getName() != null && !c.getName().trim().isEmpty() && !"Transfer".equalsIgnoreCase(c.getName())) {
+                    categorySet.add(c.getName().trim());
+                }
+            }
+        }
+
+        // Add from existing transactions
+        for (ExpenseModel e : currentExpensesList) {
+            if (e.isExpense() && e.getCategory() != null && !e.getCategory().trim().isEmpty() && !"Transfer".equalsIgnoreCase(e.getCategory())) {
+                categorySet.add(e.getCategory().trim());
+            }
+        }
+
+        // Add standard categories if list is short
+        String[] defaults = {"Food", "Transport", "Shopping", "Entertainment", "Bills", "Health", "Education", "Travel", "Groceries"};
+        for (String d : defaults) {
+            categorySet.add(d);
+        }
+
+        Map<String, Double> currentLimits = new HashMap<>();
+        for (CategoryBudget cb : currentCategoryBudgets) {
+            currentLimits.put(cb.getCategoryName(), cb.getMonthlyLimit());
+            categorySet.add(cb.getCategoryName());
+        }
+
+        List<String> sortedCats = new ArrayList<>(categorySet);
+        java.util.Collections.sort(sortedCats, String.CASE_INSENSITIVE_ORDER);
+
+        String[] displayItems = new String[sortedCats.size()];
+        for (int i = 0; i < sortedCats.size(); i++) {
+            String name = sortedCats.get(i);
+            if (currentLimits.containsKey(name)) {
+                displayItems[i] = name + "  •  Limit: " + CurrencyHelper.format(getContext(), currentLimits.get(name));
+            } else {
+                displayItems[i] = name;
+            }
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Select Category")
+                .setItems(displayItems, (dialog, which) -> {
+                    String selectedCat = sortedCats.get(which);
+                    double existingLimit = currentLimits.getOrDefault(selectedCat, 0.0);
+                    showSetCategoryBudgetDialog(selectedCat, existingLimit);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showSetCategoryBudgetDialog(String categoryName, double currentLimit) {
+        if (getContext() == null) return;
+
+        EditText etLimit = new EditText(getContext());
+        etLimit.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        etLimit.setHint("Monthly limit in " + CurrencyHelper.getCode(getContext()));
+        etLimit.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        if (currentLimit > 0) {
+            etLimit.setText(String.valueOf(currentLimit));
+        }
+
+        FrameLayout container = new FrameLayout(requireContext());
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        int margin = (int) (20 * getResources().getDisplayMetrics().density);
+        params.setMargins(margin, margin / 2, margin, 0);
+        etLimit.setLayoutParams(params);
+        container.addView(etLimit);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
+                .setTitle(categoryName + " Budget Limit")
+                .setView(container)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String val = etLimit.getText().toString().trim();
+                    if (!val.isEmpty()) {
+                        try {
+                            double limit = Double.parseDouble(val);
+                            if (limit > 0) {
+                                categoryBudgetViewModel.insertOrUpdate(new CategoryBudget(categoryName, limit));
+                                Toast.makeText(getContext(), categoryName + " budget set!", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (NumberFormatException ignored) {}
+                    }
+                })
+                .setNegativeButton("Cancel", null);
+
+        if (currentLimit > 0) {
+            builder.setNeutralButton("Remove", (dialog, which) -> {
+                categoryBudgetViewModel.deleteByName(categoryName);
+                Toast.makeText(getContext(), categoryName + " budget removed", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        builder.show();
     }
 }

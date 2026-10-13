@@ -21,6 +21,10 @@ public class WalletViewModel extends AndroidViewModel {
     public void delete(Wallet wallet) { repository.delete(wallet); }
     public LiveData<List<Wallet>> getAllWallets() { return allWallets; }
 
+    public LiveData<Wallet> getWalletById(int walletId) {
+        return repository.getWalletById(walletId);
+    }
+
     public LiveData<List<ExpenseModel>> getExpensesByWallet(int walletId) {
         return repository.getExpensesByWallet(walletId);
     }
@@ -31,5 +35,9 @@ public class WalletViewModel extends AndroidViewModel {
 
     public LiveData<Double> getExpensesByWalletTotal(int walletId) {
         return repository.getExpensesByWalletTotal(walletId);
+    }
+
+    public void transferBetweenWallets(int fromWalletId, int toWalletId, double amount, String note, String date) {
+        repository.transferBetweenWallets(fromWalletId, toWalletId, amount, note, date);
     }
 }

@@ -20,6 +20,7 @@ public class WalletFragment extends Fragment {
     WalletViewModel walletViewModel;
     TextView tvTotalBalance;
     LinearLayout emptyState;
+    private java.util.List<Wallet> currentWallets = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -29,10 +30,17 @@ public class WalletFragment extends Fragment {
         tvTotalBalance = view.findViewById(R.id.tv_total_balance);
         emptyState = view.findViewById(R.id.wallet_empty_state);
         RecyclerView recyclerView = view.findViewById(R.id.rv_wallets);
+        View btnTransfer = view.findViewById(R.id.btn_transfer_wallets);
 
         // Set up ViewModel
         walletViewModel = new ViewModelProvider(requireActivity())
                 .get(WalletViewModel.class);
+
+        if (btnTransfer != null) {
+            btnTransfer.setOnClickListener(v ->
+                    WalletTransferDialogHelper.showTransferDialog(
+                            requireContext(), walletViewModel, currentWallets, -1));
+        }
 
         // Set up adapter
         adapter = new WalletAdapter(getContext(), new ArrayList<>(), new WalletAdapter.OnWalletClickListener() {
@@ -62,8 +70,9 @@ public class WalletFragment extends Fragment {
 
         // Observe wallets
         walletViewModel.getAllWallets().observe(getViewLifecycleOwner(), wallets -> {
-            adapter.updateList(wallets);
-            if (wallets == null || wallets.isEmpty()) {
+            currentWallets = wallets != null ? wallets : new ArrayList<>();
+            adapter.updateList(currentWallets);
+            if (currentWallets.isEmpty()) {
                 recyclerView.setVisibility(View.GONE);
                 emptyState.setVisibility(View.VISIBLE);
                 tvTotalBalance.setText(CurrencyHelper.format(getContext(), 0));
@@ -72,11 +81,10 @@ public class WalletFragment extends Fragment {
                 emptyState.setVisibility(View.GONE);
                 // Calculate total balance across all wallets
                 double total = 0;
-                for (Wallet w : wallets) total += w.getBalance();
+                for (Wallet w : currentWallets) total += w.getBalance();
                 tvTotalBalance.setText(CurrencyHelper.format(getContext(), total));
             }
         });
-
 
         return view;
     }

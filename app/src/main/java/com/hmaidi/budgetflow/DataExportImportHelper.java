@@ -49,6 +49,13 @@ public class DataExportImportHelper {
     public static class BackupData {
         public List<Wallet> wallets = new ArrayList<>();
         public List<ExpenseModel> expenses = new ArrayList<>();
+        public List<CategoryModel> categories = new ArrayList<>();
+        public List<SavingsGoal> savingsGoals = new ArrayList<>();
+        public List<CategoryBudget> categoryBudgets = new ArrayList<>();
+        public String currencyCode = null;
+        public String currencySymbol = null;
+        public Double monthlyBudget = null;
+        public String userName = null;
     }
 
     // --- CSV GENERATION ---
@@ -100,12 +107,34 @@ public class DataExportImportHelper {
 
     // --- JSON GENERATION ---
 
-    public static String generateJson(List<Wallet> wallets, List<ExpenseModel> expenses) {
+    public static String generateJson(Context context,
+                                      List<Wallet> wallets,
+                                      List<ExpenseModel> expenses,
+                                      List<CategoryModel> categories,
+                                      List<SavingsGoal> savingsGoals) {
+        return generateJson(context, wallets, expenses, categories, savingsGoals, null);
+    }
+
+    public static String generateJson(Context context,
+                                      List<Wallet> wallets,
+                                      List<ExpenseModel> expenses,
+                                      List<CategoryModel> categories,
+                                      List<SavingsGoal> savingsGoals,
+                                      List<CategoryBudget> categoryBudgets) {
         try {
             JSONObject root = new JSONObject();
             root.put("app", "BudgetFlow");
-            root.put("version", 1);
+            root.put("version", 2);
             root.put("exportDate", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(new Date()));
+
+            if (context != null) {
+                JSONObject settingsObj = new JSONObject();
+                settingsObj.put("userName", CurrencyHelper.getName(context));
+                settingsObj.put("currencyCode", CurrencyHelper.getCode(context));
+                settingsObj.put("currencySymbol", CurrencyHelper.getSymbol(context));
+                settingsObj.put("monthlyBudget", CurrencyHelper.getBudget(context));
+                root.put("settings", settingsObj);
+            }
 
             // Wallets array
             JSONArray walletsArr = new JSONArray();
@@ -121,6 +150,48 @@ public class DataExportImportHelper {
                 }
             }
             root.put("wallets", walletsArr);
+
+            // Categories array
+            JSONArray categoriesArr = new JSONArray();
+            if (categories != null) {
+                for (CategoryModel c : categories) {
+                    JSONObject cObj = new JSONObject();
+                    cObj.put("name", c.getName());
+                    cObj.put("icon", c.getIcon());
+                    cObj.put("color", c.getColor());
+                    cObj.put("isExpense", c.isExpense());
+                    categoriesArr.put(cObj);
+                }
+            }
+            root.put("categories", categoriesArr);
+
+            // Savings Goals array
+            JSONArray goalsArr = new JSONArray();
+            if (savingsGoals != null) {
+                for (SavingsGoal g : savingsGoals) {
+                    JSONObject gObj = new JSONObject();
+                    gObj.put("title", g.getTitle());
+                    gObj.put("targetAmount", g.getTargetAmount());
+                    gObj.put("savedAmount", g.getSavedAmount());
+                    gObj.put("icon", g.getIcon());
+                    gObj.put("color", g.getColor());
+                    gObj.put("targetDate", g.getTargetDate());
+                    goalsArr.put(gObj);
+                }
+            }
+            root.put("savingsGoals", goalsArr);
+
+            // Category Budgets array
+            JSONArray cbArr = new JSONArray();
+            if (categoryBudgets != null) {
+                for (CategoryBudget cb : categoryBudgets) {
+                    JSONObject cbObj = new JSONObject();
+                    cbObj.put("categoryName", cb.getCategoryName());
+                    cbObj.put("monthlyLimit", cb.getMonthlyLimit());
+                    cbArr.put(cbObj);
+                }
+            }
+            root.put("categoryBudgets", cbArr);
 
             // Expenses array
             JSONArray expensesArr = new JSONArray();
@@ -154,6 +225,16 @@ public class DataExportImportHelper {
         BackupData data = new BackupData();
         JSONObject root = new JSONObject(jsonString);
 
+        if (root.has("settings")) {
+            JSONObject sObj = root.optJSONObject("settings");
+            if (sObj != null) {
+                if (sObj.has("userName")) data.userName = sObj.optString("userName", null);
+                if (sObj.has("currencyCode")) data.currencyCode = sObj.optString("currencyCode", null);
+                if (sObj.has("currencySymbol")) data.currencySymbol = sObj.optString("currencySymbol", null);
+                if (sObj.has("monthlyBudget")) data.monthlyBudget = sObj.optDouble("monthlyBudget", 0.0);
+            }
+        }
+
         if (root.has("wallets")) {
             JSONArray walletsArr = root.getJSONArray("wallets");
             for (int i = 0; i < walletsArr.length(); i++) {
@@ -161,11 +242,57 @@ public class DataExportImportHelper {
                 Wallet w = new Wallet(
                         wObj.optString("name", "Wallet"),
                         wObj.optString("icon", "ic_wallet"),
-                        wObj.optString("color", "#6366F1")
+                        wObj.optString("color", "#10B981")
                 );
                 w.setId(wObj.optInt("id", 0));
                 w.setBalance(wObj.optDouble("balance", 0.0));
                 data.wallets.add(w);
+            }
+        }
+
+        if (root.has("categories")) {
+            JSONArray catArr = root.getJSONArray("categories");
+            for (int i = 0; i < catArr.length(); i++) {
+                JSONObject cObj = catArr.getJSONObject(i);
+                CategoryModel c = new CategoryModel(
+                        cObj.optString("name", "General"),
+                        cObj.optString("icon", "ic_wallet"),
+                        cObj.optString("color", "#10B981"),
+                        cObj.optBoolean("isExpense", true)
+                );
+                if (c.isExpense()) {
+                    data.categories.add(c);
+                }
+            }
+        }
+
+        if (root.has("savingsGoals")) {
+            JSONArray goalsArr = root.getJSONArray("savingsGoals");
+            for (int i = 0; i < goalsArr.length(); i++) {
+                JSONObject gObj = goalsArr.getJSONObject(i);
+                SavingsGoal g = new SavingsGoal(
+                        gObj.optString("title", "Goal"),
+                        gObj.optDouble("targetAmount", 0.0),
+                        gObj.optDouble("savedAmount", 0.0),
+                        gObj.optString("icon", "ic_savings"),
+                        gObj.optString("color", "#10B981"),
+                        gObj.optString("targetDate", "")
+                );
+                data.savingsGoals.add(g);
+            }
+        }
+
+        if (root.has("categoryBudgets")) {
+            JSONArray cbArr = root.getJSONArray("categoryBudgets");
+            for (int i = 0; i < cbArr.length(); i++) {
+                JSONObject cbObj = cbArr.getJSONObject(i);
+                CategoryBudget cb = new CategoryBudget(
+                        cbObj.optString("categoryName", ""),
+                        cbObj.optDouble("monthlyLimit", 0.0)
+                );
+                if (!cb.getCategoryName().isEmpty() && cb.getMonthlyLimit() > 0) {
+                    data.categoryBudgets.add(cb);
+                }
             }
         }
 
@@ -388,8 +515,13 @@ public class DataExportImportHelper {
                 AppDatabase db = AppDatabase.getInstance(context);
                 List<Wallet> wallets = db.walletDao().getAllWalletsSync();
                 List<ExpenseModel> expenses = db.expenseDao().getAllExpensesSync();
+                List<CategoryModel> categories = db.categoryDao().getAllCategoriesSync();
+                List<SavingsGoal> goals = db.savingsGoalDao().getAllGoalsSync();
+                List<CategoryBudget> categoryBudgets = db.categoryBudgetDao().getAllCategoryBudgetsSync();
 
-                String output = isCsv ? generateCsv(wallets, expenses) : generateJson(wallets, expenses);
+                String output = isCsv
+                        ? generateCsv(wallets, expenses)
+                        : generateJson(context, wallets, expenses, categories, goals, categoryBudgets);
                 postToMain(() -> callback.onSuccess(output));
             } catch (Exception e) {
                 postToMain(() -> callback.onError(e));
@@ -405,6 +537,68 @@ public class DataExportImportHelper {
                 if (replaceExisting) {
                     db.expenseDao().deleteAll();
                     db.walletDao().deleteAll();
+                    if (data.categories != null && !data.categories.isEmpty()) {
+                        db.categoryDao().deleteAll();
+                    }
+                    if (data.savingsGoals != null && !data.savingsGoals.isEmpty()) {
+                        db.savingsGoalDao().deleteAll();
+                    }
+                    if (data.categoryBudgets != null && !data.categoryBudgets.isEmpty()) {
+                        db.categoryBudgetDao().deleteAll();
+                    }
+                }
+
+                // Restore user settings if present in JSON backup
+                if (context != null) {
+                    if (data.userName != null && !data.userName.isEmpty()) {
+                        CurrencyHelper.saveName(context, data.userName);
+                    }
+                    if (data.currencyCode != null && data.currencySymbol != null) {
+                        CurrencyHelper.saveCurrency(context, data.currencyCode, data.currencySymbol);
+                    }
+                    if (data.monthlyBudget != null && data.monthlyBudget >= 0) {
+                        CurrencyHelper.saveBudget(context, data.monthlyBudget);
+                    }
+                }
+
+                // Restore custom categories
+                if (data.categories != null && !data.categories.isEmpty()) {
+                    List<CategoryModel> existingCats = db.categoryDao().getAllCategoriesSync();
+                    Map<String, Boolean> existingCatNames = new HashMap<>();
+                    for (CategoryModel c : existingCats) {
+                        existingCatNames.put(c.getName().toLowerCase(), true);
+                    }
+                    for (CategoryModel c : data.categories) {
+                        if (c.isExpense() && !existingCatNames.containsKey(c.getName().toLowerCase())) {
+                            db.categoryDao().insert(new CategoryModel(c.getName(), c.getIcon(), c.getColor(), true));
+                            existingCatNames.put(c.getName().toLowerCase(), true);
+                        }
+                    }
+                }
+
+                // Restore savings goals
+                if (data.savingsGoals != null && !data.savingsGoals.isEmpty()) {
+                    List<SavingsGoal> existingGoals = db.savingsGoalDao().getAllGoalsSync();
+                    Map<String, Boolean> existingGoalTitles = new HashMap<>();
+                    for (SavingsGoal g : existingGoals) {
+                        existingGoalTitles.put(g.getTitle().toLowerCase(), true);
+                    }
+                    for (SavingsGoal g : data.savingsGoals) {
+                        if (!existingGoalTitles.containsKey(g.getTitle().toLowerCase())) {
+                            db.savingsGoalDao().insert(new SavingsGoal(
+                                    g.getTitle(), g.getTargetAmount(), g.getSavedAmount(),
+                                    g.getIcon(), g.getColor(), g.getTargetDate()
+                            ));
+                            existingGoalTitles.put(g.getTitle().toLowerCase(), true);
+                        }
+                    }
+                }
+
+                // Restore category budgets
+                if (data.categoryBudgets != null && !data.categoryBudgets.isEmpty()) {
+                    for (CategoryBudget cb : data.categoryBudgets) {
+                        db.categoryBudgetDao().insertOrUpdate(cb);
+                    }
                 }
 
                 List<Wallet> existingWallets = db.walletDao().getAllWalletsSync();
@@ -434,7 +628,7 @@ public class DataExportImportHelper {
 
                 // If no wallets at all, ensure at least one default wallet
                 if (walletNameToId.isEmpty()) {
-                    Wallet defaultW = new Wallet("Main Wallet", "ic_wallet", "#6366F1");
+                    Wallet defaultW = new Wallet("Main Wallet", "ic_wallet", "#10B981");
                     long defaultId = db.walletDao().insert(defaultW);
                     walletNameToId.put("main wallet", (int) defaultId);
                 }
