@@ -154,6 +154,28 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Recurring Bills & Subscriptions Row -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/card_dark">
+            <LinearLayout
+                android:id="@+id/row_recurring_bills"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_repeat" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
+                <TextView android:text="Recurring &amp; Subscriptions" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+                <TextView android:id="@+id/tv_recurring_bills_count" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron_right" app:tint="@color/text_secondary"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
         <!-- Notifications Row -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -220,6 +242,28 @@
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_export" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
                 <TextView android:text="Export Data" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
                 <TextView android:text="CSV / JSON" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron_right" app:tint="@color/text_secondary"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Monthly Financial Statement (PDF / HTML) Row -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/card_dark">
+            <LinearLayout
+                android:id="@+id/row_financial_statement"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_document" app:tint="@color/purple_light" android:layout_marginEnd="16dp"/>
+                <TextView android:text="Financial Statement" android:textColor="@color/text_primary" android:textSize="15sp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+                <TextView android:text="PDF / HTML Report" android:textColor="@color/text_secondary" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp"/>
                 <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron_right" app:tint="@color/text_secondary"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>

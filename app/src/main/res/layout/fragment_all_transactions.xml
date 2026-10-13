@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -34,6 +35,30 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"/>
 
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/btn_filter_dialog"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_filter"
+                android:background="@drawable/circle_bg"
+                android:backgroundTint="@color/card_dark"
+                android:padding="10dp"
+                app:tint="@color/text_primary"/>
+
+            <View
+                android:id="@+id/view_filter_active_dot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="top|end"
+                android:background="@drawable/circle_bg"
+                android:backgroundTint="@color/purple_main"
+                android:visibility="gone"/>
+        </FrameLayout>
+
     </LinearLayout>
 
     <!-- Search Bar -->
@@ -43,7 +68,8 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
-        android:hint="Search transactions..."
+        android:hint="Search title, category, date, amount..."
+        app:endIconMode="clear_text"
         style="@style/DarkInputLayout">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -56,16 +82,17 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Filter Row -->
+    <!-- Quick Type Filter Buttons & Filter Trigger -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="none"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="6dp">
 
         <LinearLayout
+            android:id="@+id/layout_quick_type_filters"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
@@ -104,10 +131,10 @@
                 style="@style/Widget.MaterialComponents.Button"/>
 
             <Button
-                android:id="@+id/filter_food"
+                android:id="@+id/filter_transfer"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-                android:text="Food"
+                android:text="Transfers"
                 android:textSize="12sp"
                 android:backgroundTint="@color/card_dark"
                 android:textColor="@color/text_secondary"
@@ -115,49 +142,35 @@
                 style="@style/Widget.MaterialComponents.Button"/>
 
             <Button
-                android:id="@+id/filter_transport"
+                android:id="@+id/btn_quick_filter_more"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-                android:text="Transport"
+                android:text="+ More Filters"
                 android:textSize="12sp"
-                android:backgroundTint="@color/card_dark"
-                android:textColor="@color/text_secondary"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button"/>
-
-            <Button
-                android:id="@+id/filter_shopping"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Shopping"
-                android:textSize="12sp"
-                android:backgroundTint="@color/card_dark"
-                android:textColor="@color/text_secondary"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button"/>
-
-            <Button
-                android:id="@+id/filter_health"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Health"
-                android:textSize="12sp"
-                android:backgroundTint="@color/card_dark"
-                android:textColor="@color/text_secondary"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button"/>
-
-            <Button
-                android:id="@+id/filter_entertainment"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Fun"
-                android:textSize="12sp"
-                android:backgroundTint="@color/card_dark"
-                android:textColor="@color/text_secondary"
+                android:backgroundTint="@color/input_bg"
+                android:textColor="@color/purple_light"
                 style="@style/Widget.MaterialComponents.Button"/>
 
         </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Active Filter Summary Chips Row -->
+    <HorizontalScrollView
+        android:id="@+id/scroll_active_filters"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:layout_marginBottom="6dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/layout_active_filter_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"/>
     </HorizontalScrollView>
 
     <!-- Results count -->

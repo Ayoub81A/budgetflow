@@ -14,15 +14,33 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Title -->
-        <TextView
-            android:text="Statistics"
-            android:textColor="@color/text_primary"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_width="wrap_content"
+        <!-- Header with Title & Export Statement Action -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:text="Statistics"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"/>
+
+            <ImageView
+                android:id="@+id/btn_stats_export_statement"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_document"
+                android:background="@drawable/circle_bg"
+                android:backgroundTint="@color/card_dark"
+                android:padding="10dp"
+                app:tint="@color/text_primary"/>
+        </LinearLayout>
 
         <!-- Time Range Selector -->
         <HorizontalScrollView

@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -110,6 +111,11 @@ public class StatsFragment extends Fragment {
         btnRangeMonth.setOnClickListener(v -> selectRange("month"));
         btnRangeYear.setOnClickListener(v -> selectRange("year"));
         btnRangeAll.setOnClickListener(v -> selectRange("all"));
+
+        ImageView btnExportStatement = view.findViewById(R.id.btn_stats_export_statement);
+        if (btnExportStatement != null) {
+            btnExportStatement.setOnClickListener(v -> showStatementExportDialog());
+        }
 
         applyTimeRangeFilter();
 
@@ -934,5 +940,74 @@ public class StatsFragment extends Fragment {
             tvTrendSavingsRate.setText("0% saved");
             tvTrendSavingsRate.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         }
+    }
+
+    private void showStatementExportDialog() {
+        if (getContext() == null) return;
+        Calendar now = Calendar.getInstance();
+        int currentMonth = now.get(Calendar.MONTH) + 1;
+        int currentYear = now.get(Calendar.YEAR);
+        String[] monthNames = {"January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"};
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Export Financial Statement")
+                .setSingleChoiceItems(monthNames, currentMonth - 1, (dialog, which) -> {
+                    dialog.dismiss();
+                    int targetMonth = which + 1;
+                    String monthName = monthNames[which];
+                    generateAndExportStatement(targetMonth, currentYear, monthName);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void generateAndExportStatement(int month, int year, String monthName) {
+        if (getContext() == null) return;
+        Toast.makeText(getContext(), "Generating statement...", Toast.LENGTH_SHORT).show();
+
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                AppDatabase db = AppDatabase.getInstance(requireContext());
+                List<Wallet> wallets = db.walletDao().getAllWalletsSync();
+                List<ExpenseModel> expenses = db.expenseDao().getAllExpensesSync();
+                List<CategoryBudget> categoryBudgets = db.categoryBudgetDao().getAllCategoryBudgetsSync();
+                double monthlyBudget = CurrencyHelper.getBudget(getContext());
+                String userName = CurrencyHelper.getName(getContext());
+
+                String html = FinancialReportHelper.generateHtmlReport(
+                        requireContext(),
+                        year,
+                        month,
+                        expenses,
+                        wallets,
+                        categoryBudgets,
+                        monthlyBudget,
+                        userName
+                );
+
+                requireActivity().runOnUiThread(() -> {
+                    String[] actions = {"Print / Save as PDF 📄", "Share HTML Statement 📤"};
+                    new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                            .setTitle(monthName + " " + year + " Statement")
+                            .setItems(actions, (d, actionIdx) -> {
+                                String filename = "BudgetFlow_Statement_" + monthName + "_" + year;
+                                if (actionIdx == 0) {
+                                    FinancialReportHelper.printOrExportPdf(requireActivity(), html, filename);
+                                } else {
+                                    FinancialReportHelper.shareHtmlReport(requireContext(), html, filename + ".html");
+                                }
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                });
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() -> {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Failed to export: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
     }
 }

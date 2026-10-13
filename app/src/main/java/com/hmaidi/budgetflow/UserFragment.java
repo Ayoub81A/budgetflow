@@ -27,6 +27,7 @@ import android.widget.Toast;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -40,10 +41,23 @@ public class UserFragment extends Fragment {
     private ActivityResultLauncher<Intent> exportCsvLauncher;
     private ActivityResultLauncher<Intent> exportJsonLauncher;
     private ActivityResultLauncher<Intent> importFileLauncher;
+    private ActivityResultLauncher<Intent> exportStatementLauncher;
+    private String pendingStatementHtml;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        exportStatementLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri uri = result.getData().getData();
+                        if (uri != null && pendingStatementHtml != null) {
+                            FinancialReportHelper.saveHtmlToUri(getContext(), uri, pendingStatementHtml);
+                        }
+                    }
+                });
 
         exportCsvLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -103,6 +117,10 @@ public class UserFragment extends Fragment {
         SwitchCompat switchNotifications = view.findViewById(R.id.switch_notifications);
         SwitchCompat switchTheme = view.findViewById(R.id.switch_theme);
 
+        LinearLayout rowRecurringBills = view.findViewById(R.id.row_recurring_bills);
+        TextView tvRecurringBillsCount = view.findViewById(R.id.tv_recurring_bills_count);
+        LinearLayout rowFinancialStatement = view.findViewById(R.id.row_financial_statement);
+
         ExpenseViewModel expenseViewModel = new ViewModelProvider(requireActivity())
                 .get(ExpenseViewModel.class);
         expenseViewModel.getTrashedExpenses().observe(getViewLifecycleOwner(), trashed -> {
@@ -112,6 +130,29 @@ public class UserFragment extends Fragment {
                 tvTrashCount.setText(trashed.size() + (trashed.size() == 1 ? " item" : " items"));
             }
         });
+
+        expenseViewModel.getAllRecurringExpenses().observe(getViewLifecycleOwner(), items -> {
+            if (tvRecurringBillsCount != null) {
+                if (items == null || items.isEmpty()) {
+                    tvRecurringBillsCount.setText("None");
+                } else {
+                    tvRecurringBillsCount.setText(items.size() + " active");
+                }
+            }
+        });
+
+        if (rowRecurringBills != null) {
+            rowRecurringBills.setOnClickListener(v -> {
+                requireActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new RecurringBillsFragment())
+                        .addToBackStack(null)
+                        .commit();
+            });
+        }
+
+        if (rowFinancialStatement != null) {
+            rowFinancialStatement.setOnClickListener(v -> showFinancialStatementDialog());
+        }
 
         rowTrashBin.setOnClickListener(v -> showTrashDialog());
         rowManageCategories.setOnClickListener(v -> showCategoriesDialog());
@@ -245,6 +286,85 @@ public class UserFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private void showFinancialStatementDialog() {
+        if (getContext() == null) return;
+
+        Calendar now = Calendar.getInstance();
+        int currentMonth = now.get(Calendar.MONTH) + 1;
+        int currentYear = now.get(Calendar.YEAR);
+
+        String[] monthNames = {"January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"};
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Select Statement Month")
+                .setSingleChoiceItems(monthNames, currentMonth - 1, (monthDialog, selectedIndex) -> {
+                    monthDialog.dismiss();
+                    int targetMonth = selectedIndex + 1;
+                    showStatementActionDialog(targetMonth, currentYear, monthNames[selectedIndex]);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showStatementActionDialog(int month, int year, String monthName) {
+        if (getContext() == null) return;
+
+        String[] actions = {"Print / Save as PDF 📄", "Share HTML Statement 📤", "Save File to Storage 💾"};
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle(monthName + " " + year + " Statement")
+                .setItems(actions, (dialog, which) -> {
+                    Toast.makeText(getContext(), "Generating statement...", Toast.LENGTH_SHORT).show();
+
+                    Executors.newSingleThreadExecutor().execute(() -> {
+                        try {
+                            AppDatabase db = AppDatabase.getInstance(requireContext());
+                            List<Wallet> wallets = db.walletDao().getAllWalletsSync();
+                            List<ExpenseModel> expenses = db.expenseDao().getAllExpensesSync();
+                            List<CategoryBudget> categoryBudgets = db.categoryBudgetDao().getAllCategoryBudgetsSync();
+                            double monthlyBudget = CurrencyHelper.getBudget(getContext());
+                            String userName = CurrencyHelper.getName(getContext());
+
+                            String html = FinancialReportHelper.generateHtmlReport(
+                                    requireContext(),
+                                    year,
+                                    month,
+                                    expenses,
+                                    wallets,
+                                    categoryBudgets,
+                                    monthlyBudget,
+                                    userName
+                            );
+
+                            requireActivity().runOnUiThread(() -> {
+                                String filename = "BudgetFlow_Statement_" + monthName + "_" + year;
+                                if (which == 0) {
+                                    FinancialReportHelper.printOrExportPdf(requireActivity(), html, filename);
+                                } else if (which == 1) {
+                                    FinancialReportHelper.shareHtmlReport(requireContext(), html, filename + ".html");
+                                } else {
+                                    pendingStatementHtml = html;
+                                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                                    intent.setType("text/html");
+                                    intent.putExtra(Intent.EXTRA_TITLE, filename + ".html");
+                                    exportStatementLauncher.launch(intent);
+                                }
+                            });
+                        } catch (Exception e) {
+                            requireActivity().runOnUiThread(() -> {
+                                if (getContext() != null) {
+                                    Toast.makeText(getContext(), "Failed to generate statement: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void showExportDialog() {

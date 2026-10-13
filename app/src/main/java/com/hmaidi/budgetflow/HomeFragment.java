@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -121,15 +122,34 @@ public class HomeFragment extends Fragment {
         }
         tvGreeting.setText(greeting);
 
-        // See All button
+        // See All button & Search button
         TextView tvSeeAll = view.findViewById(R.id.tv_see_all);
-        tvSeeAll.setOnClickListener(v ->
+        View.OnClickListener openAllAction = v ->
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.fragment_container, new AllTransactionsFragment())
                         .addToBackStack(null)
-                        .commit()
-        );
+                        .commit();
+
+        tvSeeAll.setOnClickListener(openAllAction);
+        ImageView btnHomeSearch = view.findViewById(R.id.btn_home_search);
+        if (btnHomeSearch != null) {
+            btnHomeSearch.setOnClickListener(openAllAction);
+        }
+
+        // Recurring Subscriptions Banner
+        androidx.cardview.widget.CardView cardHomeRecurring = view.findViewById(R.id.card_home_recurring_banner);
+        TextView tvHomeRecurringSummary = view.findViewById(R.id.tv_home_recurring_summary);
+
+        if (cardHomeRecurring != null) {
+            cardHomeRecurring.setOnClickListener(v ->
+                    requireActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, new RecurringBillsFragment())
+                            .addToBackStack(null)
+                            .commit()
+            );
+        }
 
         // Set up RecyclerView
         adapter = new ExpenseAdapter(getContext(), new ArrayList<>(), expense -> {
@@ -194,6 +214,27 @@ public class HomeFragment extends Fragment {
         categoryViewModel = new ViewModelProvider(requireActivity()).get(CategoryViewModel.class);
         categoryViewModel.getAllCategories().observe(getViewLifecycleOwner(), categories -> {
             availableCategories = categories != null ? categories : new ArrayList<>();
+        });
+
+        // Observe recurring bills for Home banner
+        viewModel.getAllRecurringExpenses().observe(getViewLifecycleOwner(), items -> {
+            if (cardHomeRecurring == null || tvHomeRecurringSummary == null || getContext() == null) return;
+            if (items == null || items.isEmpty()) {
+                cardHomeRecurring.setVisibility(View.GONE);
+            } else {
+                cardHomeRecurring.setVisibility(View.VISIBLE);
+                double monthlySum = 0;
+                for (ExpenseModel item : items) {
+                    if (item.isExpense()) {
+                        String interval = item.getRecurringInterval() != null ? item.getRecurringInterval().toLowerCase() : "monthly";
+                        if ("daily".equals(interval)) monthlySum += item.getAmount() * 30;
+                        else if ("weekly".equals(interval)) monthlySum += item.getAmount() * 4.33;
+                        else if ("yearly".equals(interval)) monthlySum += item.getAmount() / 12;
+                        else monthlySum += item.getAmount();
+                    }
+                }
+                tvHomeRecurringSummary.setText(items.size() + (items.size() == 1 ? " Subscription • " : " Subscriptions • ") + CurrencyHelper.format(getContext(), monthlySum) + "/mo");
+            }
         });
 
         return view;
