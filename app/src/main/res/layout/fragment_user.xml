@@ -224,6 +224,41 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- App Lock (Security) Row -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/card_dark">
+            <LinearLayout
+                android:id="@+id/row_app_lock"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_fingerprint"
+                    app:tint="@color/purple_light"
+                    android:layout_marginEnd="16dp"/>
+                <TextView
+                    android:text="App Lock (PIN &amp; Biometrics)"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switch_app_lock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
         <!-- Export Data Row -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"

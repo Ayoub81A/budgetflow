@@ -19,6 +19,7 @@ public class ExpenseModel {
     private long nextDueDate; // timestamp of next due date
     private boolean isDeleted; // true if in Trash Bin
     private long deletedTimestamp; // timestamp when placed in trash
+    private String receiptPath; // local file path to attached receipt photo
 
     // Constructor for regular expense
     public ExpenseModel(String title, String date,
@@ -35,6 +36,7 @@ public class ExpenseModel {
         this.nextDueDate = 0;
         this.isDeleted = false;
         this.deletedTimestamp = 0;
+        this.receiptPath = null;
     }
 
     // Getters
@@ -50,6 +52,7 @@ public class ExpenseModel {
     public long getNextDueDate() { return nextDueDate; }
     public boolean isDeleted() { return isDeleted; }
     public long getDeletedTimestamp() { return deletedTimestamp; }
+    public String getReceiptPath() { return receiptPath; }
 
     // Setters
     public void setId(int id) { this.id = id; }
@@ -64,4 +67,5 @@ public class ExpenseModel {
     public void setNextDueDate(long nextDueDate) { this.nextDueDate = nextDueDate; }
     public void setDeleted(boolean deleted) { isDeleted = deleted; }
     public void setDeletedTimestamp(long deletedTimestamp) { this.deletedTimestamp = deletedTimestamp; }
+    public void setReceiptPath(String receiptPath) { this.receiptPath = receiptPath; }
 }

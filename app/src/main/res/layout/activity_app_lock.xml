@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_dark"
+    android:gravity="center_horizontal"
+    android:padding="24dp">
+
+    <!-- Top Spacer -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <!-- App Logo -->
+    <ImageView
+        android:layout_width="68dp"
+        android:layout_height="68dp"
+        android:src="@drawable/ic_budgetflow_logo"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Title -->
+    <TextView
+        android:text="BudgetFlow"
+        android:textColor="@color/text_primary"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"/>
+
+    <!-- Subtitle -->
+    <TextView
+        android:id="@+id/tv_lock_subtitle"
+        android:text="Enter your PIN to unlock"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="28dp"/>
+
+    <!-- 4 PIN Dots -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="40dp">
+
+        <View
+            android:id="@+id/dot_1"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:background="@drawable/pin_dot_empty"
+            android:layout_margin="8dp"/>
+
+        <View
+            android:id="@+id/dot_2"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:background="@drawable/pin_dot_empty"
+            android:layout_margin="8dp"/>
+
+        <View
+            android:id="@+id/dot_3"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:background="@drawable/pin_dot_empty"
+            android:layout_margin="8dp"/>
+
+        <View
+            android:id="@+id/dot_4"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:background="@drawable/pin_dot_empty"
+            android:layout_margin="8dp"/>
+    </LinearLayout>
+
+    <!-- Keypad Container -->
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:columnCount="3"
+        android:rowCount="4"
+        android:alignmentMode="alignMargins"
+        android:layout_gravity="center_horizontal"
+        android:useDefaultMargins="true">
+
+        <!-- 1 -->
+        <TextView
+            android:id="@+id/btn_key_1"
+            style="@style/PinKeypadButton"
+            android:text="1"/>
+        <!-- 2 -->
+        <TextView
+            android:id="@+id/btn_key_2"
+            style="@style/PinKeypadButton"
+            android:text="2"/>
+        <!-- 3 -->
+        <TextView
+            android:id="@+id/btn_key_3"
+            style="@style/PinKeypadButton"
+            android:text="3"/>
+
+        <!-- 4 -->
+        <TextView
+            android:id="@+id/btn_key_4"
+            style="@style/PinKeypadButton"
+            android:text="4"/>
+        <!-- 5 -->
+        <TextView
+            android:id="@+id/btn_key_5"
+            style="@style/PinKeypadButton"
+            android:text="5"/>
+        <!-- 6 -->
+        <TextView
+            android:id="@+id/btn_key_6"
+            style="@style/PinKeypadButton"
+            android:text="6"/>
+
+        <!-- 7 -->
+        <TextView
+            android:id="@+id/btn_key_7"
+            style="@style/PinKeypadButton"
+            android:text="7"/>
+        <!-- 8 -->
+        <TextView
+            android:id="@+id/btn_key_8"
+            style="@style/PinKeypadButton"
+            android:text="8"/>
+        <!-- 9 -->
+        <TextView
+            android:id="@+id/btn_key_9"
+            style="@style/PinKeypadButton"
+            android:text="9"/>
+
+        <!-- Biometric Button (Bottom Left) -->
+        <ImageView
+            android:id="@+id/btn_key_biometric"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_margin="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_fingerprint"
+            app:tint="@color/purple_light"
+            android:contentDescription="Biometric Unlock"/>
+
+        <!-- 0 -->
+        <TextView
+            android:id="@+id/btn_key_0"
+            style="@style/PinKeypadButton"
+            android:text="0"/>
+
+        <!-- Delete Button (Bottom Right) -->
+        <ImageView
+            android:id="@+id/btn_key_delete"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_margin="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_backspace"
+            app:tint="@color/text_secondary"
+            android:contentDescription="Backspace"/>
+
+    </GridLayout>
+
+    <!-- Bottom Spacer -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.2"/>
+
+</LinearLayout>

@@ -61,5 +61,5 @@ dependencies {
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     implementation("androidx.work:work-runtime:2.9.0")
-
+    implementation("androidx.biometric:biometric:1.1.0")
 }

@@ -121,6 +121,12 @@ public class UserFragment extends Fragment {
         LinearLayout rowRecurringBills = view.findViewById(R.id.row_recurring_bills);
         TextView tvRecurringBillsCount = view.findViewById(R.id.tv_recurring_bills_count);
         LinearLayout rowFinancialStatement = view.findViewById(R.id.row_financial_statement);
+        LinearLayout rowAppLock = view.findViewById(R.id.row_app_lock);
+        SwitchCompat switchAppLock = view.findViewById(R.id.switch_app_lock);
+
+        if (rowAppLock != null && switchAppLock != null) {
+            setupAppLock(rowAppLock, switchAppLock);
+        }
 
         ExpenseViewModel expenseViewModel = new ViewModelProvider(requireActivity())
                 .get(ExpenseViewModel.class);
@@ -749,6 +755,211 @@ public class UserFragment extends Fragment {
                     CategoryEditorHelper.showEditorDialog(requireContext(), categoryViewModel, null, null);
                 })
                 .setNegativeButton("Close", null)
+                .show();
+    }
+
+    private void setupAppLock(LinearLayout rowAppLock, SwitchCompat switchAppLock) {
+        boolean isLocked = SecurityHelper.isLockEnabled(getContext());
+        switchAppLock.setChecked(isLocked);
+
+        switchAppLock.setOnClickListener(v -> {
+            boolean wantEnabled = switchAppLock.isChecked();
+            if (wantEnabled) {
+                if (!SecurityHelper.hasPin(getContext())) {
+                    switchAppLock.setChecked(false);
+                    showSetPinDialog(() -> {
+                        SecurityHelper.setLockEnabled(getContext(), true);
+                        switchAppLock.setChecked(true);
+                        checkOfferBiometrics();
+                    });
+                } else {
+                    SecurityHelper.setLockEnabled(getContext(), true);
+                    switchAppLock.setChecked(true);
+                    Toast.makeText(getContext(), "App Lock enabled", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                switchAppLock.setChecked(true); // Keep checked until verified
+                showVerifyPinDialog(() -> {
+                    SecurityHelper.setLockEnabled(getContext(), false);
+                    switchAppLock.setChecked(false);
+                    Toast.makeText(getContext(), "App Lock disabled", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+
+        rowAppLock.setOnClickListener(v -> {
+            if (SecurityHelper.isLockEnabled(getContext())) {
+                showAppLockManageDialog(switchAppLock);
+            } else {
+                switchAppLock.performClick();
+            }
+        });
+    }
+
+    private void showAppLockManageDialog(SwitchCompat switchAppLock) {
+        if (getContext() == null) return;
+        boolean bioSupported = SecurityHelper.isBiometricHardwareAvailable(getContext());
+        boolean bioEnabled = SecurityHelper.isBiometricEnabled(getContext());
+
+        String[] options;
+        if (bioSupported) {
+            options = new String[]{
+                    "Change PIN",
+                    "Biometric Unlock: " + (bioEnabled ? "Enabled" : "Disabled"),
+                    "Turn Off App Lock"
+            };
+        } else {
+            options = new String[]{
+                    "Change PIN",
+                    "Turn Off App Lock"
+            };
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("App Lock Settings")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        showVerifyPinDialog(() -> showSetPinDialog(null));
+                    } else if (bioSupported && which == 1) {
+                        SecurityHelper.setBiometricEnabled(getContext(), !bioEnabled);
+                        Toast.makeText(getContext(),
+                                !bioEnabled ? "Biometric unlock enabled" : "Biometric unlock disabled",
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Turn Off App Lock
+                        showVerifyPinDialog(() -> {
+                            SecurityHelper.setLockEnabled(getContext(), false);
+                            if (switchAppLock != null) switchAppLock.setChecked(false);
+                            Toast.makeText(getContext(), "App Lock disabled", Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                })
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    private void checkOfferBiometrics() {
+        if (getContext() == null) return;
+        if (SecurityHelper.isBiometricHardwareAvailable(getContext())) {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Enable Biometrics?")
+                    .setMessage("Would you like to unlock BudgetFlow with your fingerprint or face recognition in addition to PIN?")
+                    .setPositiveButton("Enable", (d, w) -> {
+                        SecurityHelper.setBiometricEnabled(getContext(), true);
+                        Toast.makeText(getContext(), "Biometric unlock enabled", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("PIN Only", (d, w) -> {
+                        SecurityHelper.setBiometricEnabled(getContext(), false);
+                    })
+                    .show();
+        }
+    }
+
+    private void showSetPinDialog(Runnable onSuccess) {
+        if (getContext() == null) return;
+
+        EditText etPin = new EditText(getContext());
+        etPin.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        etPin.setHint("Enter 4-digit PIN");
+        etPin.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        etPin.setGravity(android.view.Gravity.CENTER);
+        etPin.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(4)});
+
+        FrameLayout container = new FrameLayout(requireContext());
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        int margin = (int) (24 * getResources().getDisplayMetrics().density);
+        params.setMargins(margin, margin / 2, margin, 0);
+        etPin.setLayoutParams(params);
+        container.addView(etPin);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Create 4-Digit PIN")
+                .setMessage("Choose a 4-digit PIN to secure BudgetFlow:")
+                .setView(container)
+                .setPositiveButton("Next", (dialog, which) -> {
+                    String pin = etPin.getText().toString().trim();
+                    if (pin.length() != 4) {
+                        Toast.makeText(getContext(), "PIN must be exactly 4 digits", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    showConfirmPinDialog(pin, onSuccess);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showConfirmPinDialog(String initialPin, Runnable onSuccess) {
+        if (getContext() == null) return;
+
+        EditText etPinConfirm = new EditText(getContext());
+        etPinConfirm.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        etPinConfirm.setHint("Confirm 4-digit PIN");
+        etPinConfirm.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        etPinConfirm.setGravity(android.view.Gravity.CENTER);
+        etPinConfirm.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(4)});
+
+        FrameLayout container = new FrameLayout(requireContext());
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        int margin = (int) (24 * getResources().getDisplayMetrics().density);
+        params.setMargins(margin, margin / 2, margin, 0);
+        etPinConfirm.setLayoutParams(params);
+        container.addView(etPinConfirm);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Confirm PIN")
+                .setMessage("Re-enter your 4-digit PIN:")
+                .setView(container)
+                .setPositiveButton("Save PIN", (dialog, which) -> {
+                    String confirm = etPinConfirm.getText().toString().trim();
+                    if (!initialPin.equals(confirm)) {
+                        Toast.makeText(getContext(), "PINs do not match. Please try again.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    SecurityHelper.setPin(getContext(), initialPin);
+                    Toast.makeText(getContext(), "PIN set successfully!", Toast.LENGTH_SHORT).show();
+                    if (onSuccess != null) {
+                        onSuccess.run();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showVerifyPinDialog(Runnable onSuccess) {
+        if (getContext() == null) return;
+
+        EditText etPin = new EditText(getContext());
+        etPin.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        etPin.setHint("Enter current PIN");
+        etPin.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        etPin.setGravity(android.view.Gravity.CENTER);
+        etPin.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(4)});
+
+        FrameLayout container = new FrameLayout(requireContext());
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        int margin = (int) (24 * getResources().getDisplayMetrics().density);
+        params.setMargins(margin, margin / 2, margin, 0);
+        etPin.setLayoutParams(params);
+        container.addView(etPin);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Verify PIN")
+                .setMessage("Please enter your 4-digit PIN to continue:")
+                .setView(container)
+                .setPositiveButton("Verify", (dialog, which) -> {
+                    String entered = etPin.getText().toString().trim();
+                    if (SecurityHelper.verifyPin(getContext(), entered)) {
+                        if (onSuccess != null) {
+                            onSuccess.run();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Incorrect PIN", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
                 .show();
     }
 }

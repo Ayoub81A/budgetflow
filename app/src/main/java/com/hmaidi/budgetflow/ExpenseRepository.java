@@ -211,6 +211,10 @@ public class ExpenseRepository {
                         restored.setNextDueDate(obj.optLong("nextDueDate", 0));
                         restored.setDeleted(current.isDeleted());
                         restored.setDeletedTimestamp(current.getDeletedTimestamp());
+                        String rPath = obj.optString("receiptPath", null);
+                        if (rPath != null && !rPath.isEmpty()) {
+                            restored.setReceiptPath(rPath);
+                        }
 
                         update(restored);
                     }
@@ -265,6 +269,7 @@ public class ExpenseRepository {
             obj.put("isRecurring", e.isRecurring());
             obj.put("recurringInterval", e.getRecurringInterval());
             obj.put("nextDueDate", e.getNextDueDate());
+            obj.put("receiptPath", e.getReceiptPath() != null ? e.getReceiptPath() : "");
             return obj.toString();
         } catch (Exception ex) {
             return "";

@@ -1,5 +1,6 @@
 package com.hmaidi.budgetflow;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
@@ -99,6 +100,21 @@ public class MainActivity extends AppCompatActivity {
                         new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
             }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (SecurityHelper.shouldPromptLock(this)) {
+            Intent lockIntent = new Intent(this, AppLockActivity.class);
+            startActivity(lockIntent);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SecurityHelper.onAppPaused(this);
     }
 
     private void loadFragment(Fragment fragment) {

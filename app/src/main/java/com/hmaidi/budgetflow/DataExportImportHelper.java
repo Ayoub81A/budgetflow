@@ -209,6 +209,7 @@ public class DataExportImportHelper {
                     eObj.put("isRecurring", e.isRecurring());
                     eObj.put("recurringInterval", e.getRecurringInterval());
                     eObj.put("nextDueDate", e.getNextDueDate());
+                    eObj.put("receiptPath", e.getReceiptPath() != null ? e.getReceiptPath() : "");
                     expensesArr.put(eObj);
                 }
             }
@@ -313,6 +314,10 @@ public class DataExportImportHelper {
                 expense.setRecurring(eObj.optBoolean("isRecurring", false));
                 expense.setRecurringInterval(eObj.optString("recurringInterval", ""));
                 expense.setNextDueDate(eObj.optLong("nextDueDate", 0));
+                String rPath = eObj.optString("receiptPath", null);
+                if (rPath != null && !rPath.isEmpty()) {
+                    expense.setReceiptPath(rPath);
+                }
                 data.expenses.add(expense);
             }
         }

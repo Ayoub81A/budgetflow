@@ -281,6 +281,77 @@
 
         </LinearLayout>
 
+        <!-- Receipt Attachment Section -->
+        <LinearLayout
+            android:id="@+id/layout_receipt_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <!-- Attach Receipt Button (shown when no receipt attached) -->
+            <LinearLayout
+                android:id="@+id/btn_attach_receipt"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:background="@drawable/rounded_input_bg">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_document"
+                    app:tint="@color/purple_light"
+                    android:layout_marginEnd="10dp"/>
+
+                <TextView
+                    android:id="@+id/tv_attach_receipt_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Attach Receipt Photo (Optional)"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"/>
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/text_secondary"/>
+            </LinearLayout>
+
+            <!-- Receipt Preview (shown when receipt is attached) -->
+            <FrameLayout
+                android:id="@+id/layout_receipt_preview"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:visibility="gone"
+                android:background="@drawable/rounded_input_bg"
+                android:padding="6dp">
+
+                <ImageView
+                    android:id="@+id/iv_receipt_thumbnail"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:background="@color/card_dark"/>
+
+                <ImageView
+                    android:id="@+id/btn_remove_receipt"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="6dp"
+                    android:background="@drawable/pill_toggle_bg"
+                    android:src="@drawable/ic_delete"
+                    app:tint="@color/expense_red"
+                    android:padding="5dp"/>
+            </FrameLayout>
+        </LinearLayout>
+
         <!-- Save Button -->
         <Button
             android:id="@+id/btn_save"

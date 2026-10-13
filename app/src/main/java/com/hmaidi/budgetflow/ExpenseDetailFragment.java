@@ -28,6 +28,7 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
         args.putBoolean("isRecurring", expense.isRecurring());
         args.putString("recurringInterval", expense.getRecurringInterval());
         args.putLong("nextDueDate", expense.getNextDueDate());
+        args.putString("receiptPath", expense.getReceiptPath());
         fragment.setArguments(args);
         return fragment;
     }
@@ -50,6 +51,7 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
         expense.setRecurring(args.getBoolean("isRecurring", false));
         expense.setRecurringInterval(args.getString("recurringInterval", ""));
         expense.setNextDueDate(args.getLong("nextDueDate", 0));
+        expense.setReceiptPath(args.getString("receiptPath", null));
 
         ImageView ivDetailIcon = view.findViewById(R.id.iv_detail_icon);
         TextView tvTitle = view.findViewById(R.id.tv_detail_title);
@@ -99,6 +101,22 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
             tvType.setTextColor(ContextCompat.getColor(getContext(), R.color.income_green));
         }
 
+        View layoutDetailReceipt = view.findViewById(R.id.layout_detail_receipt);
+        View cardReceiptPreview = view.findViewById(R.id.card_receipt_preview);
+        ImageView ivDetailReceipt = view.findViewById(R.id.iv_detail_receipt);
+
+        if (layoutDetailReceipt != null && expense.getReceiptPath() != null
+                && new java.io.File(expense.getReceiptPath()).exists()) {
+            layoutDetailReceipt.setVisibility(View.VISIBLE);
+            ReceiptHelper.loadReceiptIntoView(expense.getReceiptPath(), ivDetailReceipt);
+            if (cardReceiptPreview != null) {
+                cardReceiptPreview.setOnClickListener(v ->
+                        ReceiptHelper.showFullscreenReceipt(getContext(), expense.getReceiptPath(), expense.getTitle()));
+            }
+        } else if (layoutDetailReceipt != null) {
+            layoutDetailReceipt.setVisibility(View.GONE);
+        }
+
         btnEdit.setOnClickListener(v -> showEditDialog());
 
         btnHistory.setOnClickListener(v -> showHistoryDialog());
@@ -140,6 +158,16 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
         etCategory.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
         layout.addView(etCategory);
 
+        boolean hasReceipt = expense.getReceiptPath() != null && new java.io.File(expense.getReceiptPath()).exists();
+        final boolean[] removeReceiptFlag = {false};
+        if (hasReceipt) {
+            android.widget.CheckBox cbRemoveReceipt = new android.widget.CheckBox(getContext());
+            cbRemoveReceipt.setText("Remove attached receipt photo");
+            cbRemoveReceipt.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+            cbRemoveReceipt.setOnCheckedChangeListener((btn, isChecked) -> removeReceiptFlag[0] = isChecked);
+            layout.addView(cbRemoveReceipt);
+        }
+
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Edit Transaction")
                 .setView(layout)
@@ -154,6 +182,10 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
                             expense.setAmount(newAmt);
                             if (!cat.isEmpty()) {
                                 expense.setCategory(cat);
+                            }
+                            if (removeReceiptFlag[0]) {
+                                ReceiptHelper.deleteReceiptFile(expense.getReceiptPath());
+                                expense.setReceiptPath(null);
                             }
                             ExpenseViewModel viewModel = new ViewModelProvider(requireActivity()).get(ExpenseViewModel.class);
                             viewModel.update(expense);

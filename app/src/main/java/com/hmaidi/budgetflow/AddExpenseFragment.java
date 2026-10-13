@@ -12,13 +12,18 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import java.io.File;
 import java.util.Calendar;
+import android.net.Uri;
 import androidx.appcompat.widget.SwitchCompat;
 
 public class AddExpenseFragment extends BottomSheetDialogFragment {
@@ -32,12 +37,48 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
     boolean isRecurring = false;
     String selectedInterval = "monthly";
 
+    private String attachedReceiptPath = null;
+    private File pendingCameraFile = null;
+    private ActivityResultLauncher<String> pickImageLauncher;
+    private ActivityResultLauncher<Uri> takePhotoLauncher;
+    private View btnAttachReceipt;
+    private View layoutReceiptPreview;
+    private ImageView ivReceiptThumbnail;
+
     public static AddExpenseFragment newInstance(boolean preselectRecurring) {
         AddExpenseFragment fragment = new AddExpenseFragment();
         Bundle args = new Bundle();
         args.putBoolean(ARG_PRESELECT_RECURRING, preselectRecurring);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        pickImageLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null && getContext() != null) {
+                        String path = ReceiptHelper.copyImageUriToInternalReceipt(getContext(), uri);
+                        if (path != null) {
+                            attachedReceiptPath = path;
+                            updateReceiptViews();
+                        } else {
+                            Toast.makeText(getContext(), "Failed to attach photo", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+        takePhotoLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicture(),
+                success -> {
+                    if (success && pendingCameraFile != null && pendingCameraFile.exists()) {
+                        attachedReceiptPath = pendingCameraFile.getAbsolutePath();
+                        updateReceiptViews();
+                    }
+                });
     }
 
     @Override
@@ -263,6 +304,34 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
             highlightInterval(view, btnYearly);
         });
 
+        // Receipt Attachment UI
+        btnAttachReceipt = view.findViewById(R.id.btn_attach_receipt);
+        layoutReceiptPreview = view.findViewById(R.id.layout_receipt_preview);
+        ivReceiptThumbnail = view.findViewById(R.id.iv_receipt_thumbnail);
+        ImageView btnRemoveReceipt = view.findViewById(R.id.btn_remove_receipt);
+
+        if (btnAttachReceipt != null) {
+            btnAttachReceipt.setOnClickListener(v -> showAttachReceiptDialog());
+        }
+
+        if (btnRemoveReceipt != null) {
+            btnRemoveReceipt.setOnClickListener(v -> {
+                if (attachedReceiptPath != null) {
+                    ReceiptHelper.deleteReceiptFile(attachedReceiptPath);
+                    attachedReceiptPath = null;
+                    updateReceiptViews();
+                }
+            });
+        }
+
+        if (ivReceiptThumbnail != null) {
+            ivReceiptThumbnail.setOnClickListener(v -> {
+                if (attachedReceiptPath != null) {
+                    ReceiptHelper.showFullscreenReceipt(getContext(), attachedReceiptPath, "Receipt");
+                }
+            });
+        }
+
         // Save button
         Button btnSave = view.findViewById(R.id.btn_save);
         btnSave.setOnClickListener(v -> {
@@ -306,6 +375,10 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
                 expense.setNextDueDate(getFirstDueDate(selectedInterval));
             }
 
+            if (attachedReceiptPath != null) {
+                expense.setReceiptPath(attachedReceiptPath);
+            }
+
             ExpenseViewModel viewModel = new ViewModelProvider(requireActivity())
                     .get(ExpenseViewModel.class);
             viewModel.insert(expense);
@@ -314,6 +387,41 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         });
 
         return view;
+    }
+
+    private void updateReceiptViews() {
+        if (layoutReceiptPreview == null || btnAttachReceipt == null) return;
+        if (attachedReceiptPath != null && new File(attachedReceiptPath).exists()) {
+            layoutReceiptPreview.setVisibility(View.VISIBLE);
+            btnAttachReceipt.setVisibility(View.GONE);
+            ReceiptHelper.loadReceiptIntoView(attachedReceiptPath, ivReceiptThumbnail);
+        } else {
+            layoutReceiptPreview.setVisibility(View.GONE);
+            btnAttachReceipt.setVisibility(View.VISIBLE);
+            attachedReceiptPath = null;
+        }
+    }
+
+    private void showAttachReceiptDialog() {
+        if (getContext() == null) return;
+        String[] options = {"Take Photo", "Choose from Gallery"};
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Attach Receipt Photo")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        try {
+                            pendingCameraFile = ReceiptHelper.createTempReceiptFile(requireContext());
+                            Uri cameraUri = ReceiptHelper.getFileUri(requireContext(), pendingCameraFile);
+                            takePhotoLauncher.launch(cameraUri);
+                        } catch (Exception e) {
+                            Toast.makeText(getContext(), "Cannot launch camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        pickImageLauncher.launch("image/*");
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void applyCategorySelectionStyle(ImageView icon, TextView label, boolean isSelected) {
