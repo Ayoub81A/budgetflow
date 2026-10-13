@@ -56,7 +56,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
     implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
 
-    implementation("com.google.android.material:material:1.11.0")
+    // Splash Screen (Android 12+ and backward compatible)
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 

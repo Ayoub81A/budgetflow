@@ -21,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
+
         if (CurrencyHelper.isDarkTheme(this)) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         } else {
