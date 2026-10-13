@@ -29,6 +29,8 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
         args.putString("recurringInterval", expense.getRecurringInterval());
         args.putLong("nextDueDate", expense.getNextDueDate());
         args.putString("receiptPath", expense.getReceiptPath());
+        args.putString("notes", expense.getNotes());
+        args.putString("tags", expense.getTags());
         fragment.setArguments(args);
         return fragment;
     }
@@ -52,6 +54,8 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
         expense.setRecurringInterval(args.getString("recurringInterval", ""));
         expense.setNextDueDate(args.getLong("nextDueDate", 0));
         expense.setReceiptPath(args.getString("receiptPath", null));
+        expense.setNotes(args.getString("notes", null));
+        expense.setTags(args.getString("tags", null));
 
         ImageView ivDetailIcon = view.findViewById(R.id.iv_detail_icon);
         TextView tvTitle = view.findViewById(R.id.tv_detail_title);
@@ -99,6 +103,24 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
             tvAmount.setTextColor(ContextCompat.getColor(getContext(), R.color.income_green));
             tvType.setText("Income");
             tvType.setTextColor(ContextCompat.getColor(getContext(), R.color.income_green));
+        }
+
+        View rowNotes = view.findViewById(R.id.row_detail_notes);
+        TextView tvNotes = view.findViewById(R.id.tv_detail_notes);
+        if (expense.getNotes() != null && !expense.getNotes().trim().isEmpty()) {
+            rowNotes.setVisibility(View.VISIBLE);
+            tvNotes.setText(expense.getNotes());
+        } else if (rowNotes != null) {
+            rowNotes.setVisibility(View.GONE);
+        }
+
+        View rowTags = view.findViewById(R.id.row_detail_tags);
+        TextView tvTags = view.findViewById(R.id.tv_detail_tags);
+        if (expense.getTags() != null && !expense.getTags().trim().isEmpty()) {
+            rowTags.setVisibility(View.VISIBLE);
+            tvTags.setText(expense.getTags());
+        } else if (rowTags != null) {
+            rowTags.setVisibility(View.GONE);
         }
 
         View layoutDetailReceipt = view.findViewById(R.id.layout_detail_receipt);
@@ -158,6 +180,18 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
         etCategory.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
         layout.addView(etCategory);
 
+        android.widget.EditText etNotes = new android.widget.EditText(getContext());
+        etNotes.setHint("Notes / Memo (Optional)");
+        if (expense.getNotes() != null) etNotes.setText(expense.getNotes());
+        etNotes.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        layout.addView(etNotes);
+
+        android.widget.EditText etTags = new android.widget.EditText(getContext());
+        etTags.setHint("Tags (e.g. #food, #work)");
+        if (expense.getTags() != null) etTags.setText(expense.getTags());
+        etTags.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        layout.addView(etTags);
+
         boolean hasReceipt = expense.getReceiptPath() != null && new java.io.File(expense.getReceiptPath()).exists();
         final boolean[] removeReceiptFlag = {false};
         if (hasReceipt) {
@@ -183,6 +217,11 @@ public class ExpenseDetailFragment extends BottomSheetDialogFragment {
                             if (!cat.isEmpty()) {
                                 expense.setCategory(cat);
                             }
+                            String n = etNotes.getText().toString().trim();
+                            expense.setNotes(n.isEmpty() ? null : n);
+                            String t = etTags.getText().toString().trim();
+                            expense.setTags(t.isEmpty() ? null : t);
+
                             if (removeReceiptFlag[0]) {
                                 ReceiptHelper.deleteReceiptFile(expense.getReceiptPath());
                                 expense.setReceiptPath(null);

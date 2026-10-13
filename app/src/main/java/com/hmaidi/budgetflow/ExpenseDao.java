@@ -39,6 +39,10 @@ public interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE isRecurring = 1 AND nextDueDate <= :now AND isDeleted = 0")
     List<ExpenseModel> getDueRecurringExpenses(long now);
 
+    // Get all recurring expenses due within a window
+    @Query("SELECT * FROM expenses WHERE isRecurring = 1 AND isDeleted = 0 AND nextDueDate > :now AND nextDueDate <= :maxTime ORDER BY nextDueDate ASC")
+    List<ExpenseModel> getUpcomingRecurringExpenses(long now, long maxTime);
+
     // Get all recurring expenses for display
     @Query("SELECT * FROM expenses WHERE isRecurring = 1 AND isDeleted = 0 ORDER BY nextDueDate ASC")
     LiveData<List<ExpenseModel>> getAllRecurringExpenses();

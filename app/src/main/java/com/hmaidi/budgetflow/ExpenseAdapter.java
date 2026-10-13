@@ -66,6 +66,17 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ExpenseV
             holder.ivReceiptIndicator.setVisibility(hasReceipt ? View.VISIBLE : View.GONE);
         }
 
+        // Show tags
+        if (holder.tvItemTags != null) {
+            String tags = expense.getTags();
+            if (tags != null && !tags.trim().isEmpty()) {
+                holder.tvItemTags.setVisibility(View.VISIBLE);
+                holder.tvItemTags.setText(tags.trim());
+            } else {
+                holder.tvItemTags.setVisibility(View.GONE);
+            }
+        }
+
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onExpenseClick(expense);
@@ -79,7 +90,7 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ExpenseV
     }
 
     public static class ExpenseViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTitle, tvDate, tvAmount, tvRecurringBadge;
+        TextView tvTitle, tvDate, tvAmount, tvRecurringBadge, tvItemTags;
         ImageView ivCategory, ivReceiptIndicator;
 
         public ExpenseViewHolder(View itemView) {
@@ -88,6 +99,7 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ExpenseV
             tvDate = itemView.findViewById(R.id.tv_date);
             tvAmount = itemView.findViewById(R.id.tv_amount);
             tvRecurringBadge = itemView.findViewById(R.id.tv_recurring_badge);
+            tvItemTags = itemView.findViewById(R.id.tv_item_tags);
             ivCategory = itemView.findViewById(R.id.iv_category);
             ivReceiptIndicator = itemView.findViewById(R.id.iv_receipt_indicator);
         }

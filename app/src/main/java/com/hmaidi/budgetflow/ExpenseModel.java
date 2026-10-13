@@ -20,6 +20,8 @@ public class ExpenseModel {
     private boolean isDeleted; // true if in Trash Bin
     private long deletedTimestamp; // timestamp when placed in trash
     private String receiptPath; // local file path to attached receipt photo
+    private String notes; // optional note/memo
+    private String tags; // optional comma-separated tags, e.g. "groceries, work"
 
     // Constructor for regular expense
     public ExpenseModel(String title, String date,
@@ -37,6 +39,8 @@ public class ExpenseModel {
         this.isDeleted = false;
         this.deletedTimestamp = 0;
         this.receiptPath = null;
+        this.notes = null;
+        this.tags = null;
     }
 
     // Getters
@@ -53,6 +57,8 @@ public class ExpenseModel {
     public boolean isDeleted() { return isDeleted; }
     public long getDeletedTimestamp() { return deletedTimestamp; }
     public String getReceiptPath() { return receiptPath; }
+    public String getNotes() { return notes; }
+    public String getTags() { return tags; }
 
     // Setters
     public void setId(int id) { this.id = id; }
@@ -68,4 +74,6 @@ public class ExpenseModel {
     public void setDeleted(boolean deleted) { isDeleted = deleted; }
     public void setDeletedTimestamp(long deletedTimestamp) { this.deletedTimestamp = deletedTimestamp; }
     public void setReceiptPath(String receiptPath) { this.receiptPath = receiptPath; }
+    public void setNotes(String notes) { this.notes = notes; }
+    public void setTags(String tags) { this.tags = tags; }
 }

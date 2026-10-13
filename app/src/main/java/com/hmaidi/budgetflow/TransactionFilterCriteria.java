@@ -81,7 +81,9 @@ public class TransactionFilterCriteria implements Serializable {
             boolean inCategory = e.getCategory() != null && e.getCategory().toLowerCase().contains(q);
             boolean inDate = e.getDate() != null && e.getDate().contains(q);
             boolean inAmount = String.valueOf(e.getAmount()).contains(q);
-            if (!inTitle && !inCategory && !inDate && !inAmount) {
+            boolean inNotes = e.getNotes() != null && e.getNotes().toLowerCase().contains(q);
+            boolean inTags = e.getTags() != null && e.getTags().toLowerCase().contains(q);
+            if (!inTitle && !inCategory && !inDate && !inAmount && !inNotes && !inTags) {
                 return false;
             }
         }

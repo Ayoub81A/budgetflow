@@ -62,6 +62,13 @@ public class StatsFragment extends Fragment {
     private TextView tvTrendDailyAvg, tvTrendDailyAvgSub;
     private TextView tvTrendNetSaved, tvTrendSavingsRate;
 
+    // Month-over-Month Insight Views
+    private TextView tvMomSubtitle, tvMomIndicatorPill;
+    private TextView tvMomThisMonth, tvMomLastMonth;
+    private TextView tvMomDiffPercent, tvMomDiffLabel;
+    private TextView tvMomProjected, tvMomProjectionPace;
+    private TextView tvMomPeakDay, tvMomPeakDayAmount;
+
     private TextView tvIncome, tvExpense, tvBalance;
     private ExpenseViewModel viewModel;
     private Button btnRangeWeek, btnRangeMonth, btnRangeYear, btnRangeAll;
@@ -101,6 +108,17 @@ public class StatsFragment extends Fragment {
         tvTrendDailyAvgSub = view.findViewById(R.id.tv_trend_daily_avg_sub);
         tvTrendNetSaved = view.findViewById(R.id.tv_trend_net_saved);
         tvTrendSavingsRate = view.findViewById(R.id.tv_trend_savings_rate);
+
+        tvMomSubtitle = view.findViewById(R.id.tv_mom_subtitle);
+        tvMomIndicatorPill = view.findViewById(R.id.tv_mom_indicator_pill);
+        tvMomThisMonth = view.findViewById(R.id.tv_mom_this_month);
+        tvMomLastMonth = view.findViewById(R.id.tv_mom_last_month);
+        tvMomDiffPercent = view.findViewById(R.id.tv_mom_diff_percent);
+        tvMomDiffLabel = view.findViewById(R.id.tv_mom_diff_label);
+        tvMomProjected = view.findViewById(R.id.tv_mom_projected);
+        tvMomProjectionPace = view.findViewById(R.id.tv_mom_projection_pace);
+        tvMomPeakDay = view.findViewById(R.id.tv_mom_peak_day);
+        tvMomPeakDayAmount = view.findViewById(R.id.tv_mom_peak_day_amount);
 
         btnRangeWeek = view.findViewById(R.id.btn_range_week);
         btnRangeMonth = view.findViewById(R.id.btn_range_month);
@@ -216,6 +234,7 @@ public class StatsFragment extends Fragment {
 
         buildPieChart(expenseOnly);
         buildBarChart(filtered, periodIncome, periodExpense);
+        updateMonthOverMonthInsights();
     }
 
     private List<ExpenseModel> filterExpensesByRange(List<ExpenseModel> list, String range) {
@@ -939,6 +958,116 @@ public class StatsFragment extends Fragment {
         } else {
             tvTrendSavingsRate.setText("0% saved");
             tvTrendSavingsRate.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        }
+    }
+
+    private void updateMonthOverMonthInsights() {
+        if (getContext() == null || tvMomThisMonth == null) return;
+
+        Calendar now = Calendar.getInstance();
+        int currentM = now.get(Calendar.MONTH) + 1;
+        int currentY = now.get(Calendar.YEAR);
+
+        Calendar lastMonthCal = Calendar.getInstance();
+        lastMonthCal.add(Calendar.MONTH, -1);
+        int lastM = lastMonthCal.get(Calendar.MONTH) + 1;
+        int lastY = lastMonthCal.get(Calendar.YEAR);
+
+        String[] monthNames = {"January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"};
+        tvMomSubtitle.setText(monthNames[currentM - 1] + " vs. " + monthNames[lastM - 1]);
+
+        double thisMonthSpend = 0.0;
+        double lastMonthSpend = 0.0;
+        double[] weekdaySpend = new double[8]; // 1 = Sunday, ..., 7 = Saturday
+
+        for (ExpenseModel item : allExpenses) {
+            if ("Transfer".equalsIgnoreCase(item.getCategory()) || !item.isExpense()) {
+                continue;
+            }
+            String dStr = item.getDate();
+            if (dStr == null) continue;
+            String[] parts = dStr.trim().split("/");
+            if (parts.length != 3) continue;
+
+            try {
+                int d = Integer.parseInt(parts[0]);
+                int m = Integer.parseInt(parts[1]);
+                int y = Integer.parseInt(parts[2]);
+
+                if (y == currentY && m == currentM) {
+                    thisMonthSpend += item.getAmount();
+                    Calendar itemCal = Calendar.getInstance();
+                    itemCal.set(y, m - 1, d, 12, 0, 0);
+                    int dow = itemCal.get(Calendar.DAY_OF_WEEK);
+                    if (dow >= 1 && dow <= 7) {
+                        weekdaySpend[dow] += item.getAmount();
+                    }
+                } else if (y == lastY && m == lastM) {
+                    lastMonthSpend += item.getAmount();
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+
+        tvMomThisMonth.setText(CurrencyHelper.format(getContext(), thisMonthSpend));
+        tvMomLastMonth.setText(CurrencyHelper.format(getContext(), lastMonthSpend));
+
+        // Diff & Pill
+        if (lastMonthSpend > 0) {
+            double diff = thisMonthSpend - lastMonthSpend;
+            double pctDiff = (diff / lastMonthSpend) * 100.0;
+            if (diff < 0) {
+                tvMomDiffPercent.setText(String.format(Locale.US, "%.1f%%", pctDiff));
+                tvMomDiffPercent.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_green));
+                tvMomDiffLabel.setText("Spent less");
+                tvMomIndicatorPill.setText("Under Budget");
+                tvMomIndicatorPill.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_green));
+            } else if (diff > 0) {
+                tvMomDiffPercent.setText(String.format(Locale.US, "+%.1f%%", pctDiff));
+                tvMomDiffPercent.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_red));
+                tvMomDiffLabel.setText("Spent more");
+                tvMomIndicatorPill.setText("Higher Spend");
+                tvMomIndicatorPill.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_red));
+            } else {
+                tvMomDiffPercent.setText("0.0%");
+                tvMomDiffPercent.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+                tvMomDiffLabel.setText("Equal");
+                tvMomIndicatorPill.setText("On Track");
+                tvMomIndicatorPill.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_green));
+            }
+        } else {
+            tvMomDiffPercent.setText("N/A");
+            tvMomDiffPercent.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+            tvMomDiffLabel.setText("No prior data");
+            tvMomIndicatorPill.setText("First Month");
+            tvMomIndicatorPill.setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_light));
+        }
+
+        // Projection
+        int currentDay = Math.max(1, now.get(Calendar.DAY_OF_MONTH));
+        int totalDays = now.getActualMaximum(Calendar.DAY_OF_MONTH);
+        double dailyPace = thisMonthSpend / currentDay;
+        double projectedTotal = dailyPace * totalDays;
+        tvMomProjected.setText(CurrencyHelper.format(getContext(), projectedTotal));
+        tvMomProjectionPace.setText(String.format(Locale.US, "Pacing at %s/day", CurrencyHelper.format(getContext(), dailyPace)));
+
+        // Peak Weekday
+        int bestDay = -1;
+        double maxDayAmount = 0.0;
+        for (int i = 1; i <= 7; i++) {
+            if (weekdaySpend[i] > maxDayAmount) {
+                maxDayAmount = weekdaySpend[i];
+                bestDay = i;
+            }
+        }
+
+        String[] weekdayNames = {"", "Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"};
+        if (bestDay > 0 && maxDayAmount > 0) {
+            tvMomPeakDay.setText(weekdayNames[bestDay]);
+            tvMomPeakDayAmount.setText(CurrencyHelper.format(getContext(), maxDayAmount) + " spent");
+        } else {
+            tvMomPeakDay.setText("None");
+            tvMomPeakDayAmount.setText(CurrencyHelper.format(getContext(), 0.0) + " spent");
         }
     }
 

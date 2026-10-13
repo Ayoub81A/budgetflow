@@ -215,6 +215,8 @@ public class ExpenseRepository {
                         if (rPath != null && !rPath.isEmpty()) {
                             restored.setReceiptPath(rPath);
                         }
+                        restored.setNotes(obj.optString("notes", ""));
+                        restored.setTags(obj.optString("tags", ""));
 
                         update(restored);
                     }
@@ -270,6 +272,8 @@ public class ExpenseRepository {
             obj.put("recurringInterval", e.getRecurringInterval());
             obj.put("nextDueDate", e.getNextDueDate());
             obj.put("receiptPath", e.getReceiptPath() != null ? e.getReceiptPath() : "");
+            obj.put("notes", e.getNotes() != null ? e.getNotes() : "");
+            obj.put("tags", e.getTags() != null ? e.getTags() : "");
             return obj.toString();
         } catch (Exception ex) {
             return "";

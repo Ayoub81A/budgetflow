@@ -69,6 +69,11 @@ public class RecurringWorker extends Worker {
             BudgetNotificationHelper.checkAllBudgetsAsync(getApplicationContext());
         }
 
+        // Check for upcoming bills due in the next 48 hours and send reminder notifications
+        if (CurrencyHelper.getNotifications(getApplicationContext())) {
+            checkUpcomingBillReminders(expenseDao, now);
+        }
+
         return Result.success();
     }
 
@@ -113,5 +118,60 @@ public class RecurringWorker extends Worker {
                 .setAutoCancel(true);
 
         manager.notify((int) System.currentTimeMillis(), builder.build());
+    }
+
+    private void checkUpcomingBillReminders(ExpenseDao expenseDao, long now) {
+        Context context = getApplicationContext();
+        android.content.SharedPreferences prefs =
+                context.getSharedPreferences("bill_reminders_prefs", Context.MODE_PRIVATE);
+
+        long in48Hours = now + (48L * 60 * 60 * 1000);
+        List<ExpenseModel> upcoming = expenseDao.getUpcomingRecurringExpenses(now, in48Hours);
+
+        if (upcoming != null) {
+            for (ExpenseModel item : upcoming) {
+                String key = "reminded_" + item.getId() + "_" + item.getNextDueDate();
+                if (!prefs.getBoolean(key, false)) {
+                    long diffMs = item.getNextDueDate() - now;
+                    long diffHours = diffMs / (1000 * 60 * 60);
+
+                    String timing;
+                    if (diffHours <= 24) {
+                        timing = "is due tomorrow (" + CurrencyHelper.format(context, item.getAmount()) + ")";
+                    } else {
+                        timing = "is due in 2 days (" + CurrencyHelper.format(context, item.getAmount()) + ")";
+                    }
+
+                    showUpcomingReminderNotification(item, timing);
+                    prefs.edit().putBoolean(key, true).apply();
+                }
+            }
+        }
+    }
+
+    private void showUpcomingReminderNotification(ExpenseModel item, String timing) {
+        Context context = getApplicationContext();
+        NotificationManager manager = (NotificationManager)
+                context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID, "Recurring Transactions",
+                    NotificationManager.IMPORTANCE_DEFAULT);
+            manager.createNotificationChannel(channel);
+        }
+
+        String type = item.isExpense() ? "Bill" : "Income";
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_repeat)
+                .setContentTitle("Upcoming " + type + " Reminder")
+                .setContentText(item.getTitle() + " " + timing)
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText("Reminder: Your recurring " + (item.isExpense() ? "bill" : "income")
+                                + " '" + item.getTitle() + "' " + timing + "."))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+
+        manager.notify((int) (item.getId() + 100000), builder.build());
     }
 }

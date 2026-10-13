@@ -90,11 +90,35 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         TextInputEditText etAmount = view.findViewById(R.id.et_amount);
         TextInputEditText etDate = view.findViewById(R.id.et_date);
         TextInputEditText etSource = view.findViewById(R.id.et_source);
+        TextInputEditText etNotes = view.findViewById(R.id.et_notes);
+        TextInputEditText etTags = view.findViewById(R.id.et_tags);
         Button btnExpense = view.findViewById(R.id.btn_expense);
         Button btnIncome = view.findViewById(R.id.btn_income);
         TextInputLayout layoutSource = view.findViewById(R.id.layout_source);
         LinearLayout categoryContainer = view.findViewById(R.id.category_container);
         TextView tvSelectedWallet = view.findViewById(R.id.tv_selected_wallet);
+
+        // Quick Tag Chips Click Handlers
+        int[] chipIds = {
+                R.id.chip_tag_groceries, R.id.chip_tag_dining,
+                R.id.chip_tag_travel, R.id.chip_tag_work,
+                R.id.chip_tag_gift, R.id.chip_tag_bills
+        };
+        for (int chipId : chipIds) {
+            TextView chip = view.findViewById(chipId);
+            if (chip != null && etTags != null) {
+                chip.setOnClickListener(v -> {
+                    String chipText = chip.getText().toString().trim();
+                    String current = etTags.getText() != null ? etTags.getText().toString().trim() : "";
+                    if (current.isEmpty()) {
+                        etTags.setText(chipText);
+                    } else if (!current.contains(chipText)) {
+                        etTags.setText(current + ", " + chipText);
+                    }
+                    etTags.setSelection(etTags.getText().length());
+                });
+            }
+        }
 
         // Auto-fill today's date
         Calendar calendar = Calendar.getInstance();
@@ -377,6 +401,20 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
 
             if (attachedReceiptPath != null) {
                 expense.setReceiptPath(attachedReceiptPath);
+            }
+
+            if (etNotes != null && etNotes.getText() != null) {
+                String notes = etNotes.getText().toString().trim();
+                if (!notes.isEmpty()) {
+                    expense.setNotes(notes);
+                }
+            }
+
+            if (etTags != null && etTags.getText() != null) {
+                String tags = etTags.getText().toString().trim();
+                if (!tags.isEmpty()) {
+                    expense.setTags(tags);
+                }
             }
 
             ExpenseViewModel viewModel = new ViewModelProvider(requireActivity())

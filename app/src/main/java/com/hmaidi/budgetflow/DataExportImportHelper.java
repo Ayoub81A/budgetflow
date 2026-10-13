@@ -75,7 +75,7 @@ public class DataExportImportHelper {
         }
 
         // CSV Header
-        sb.append("Date,Title,Amount,Type,Category,Wallet,Recurring,Interval\n");
+        sb.append("Date,Title,Amount,Type,Category,Wallet,Recurring,Interval,Notes,Tags\n");
 
         if (expenses != null) {
             for (ExpenseModel e : expenses) {
@@ -91,7 +91,9 @@ public class DataExportImportHelper {
                 sb.append(escapeCsv(e.getCategory())).append(",");
                 sb.append(escapeCsv(walletName)).append(",");
                 sb.append(escapeCsv(recurringStr)).append(",");
-                sb.append(escapeCsv(intervalStr)).append("\n");
+                sb.append(escapeCsv(intervalStr)).append(",");
+                sb.append(escapeCsv(e.getNotes() != null ? e.getNotes() : "")).append(",");
+                sb.append(escapeCsv(e.getTags() != null ? e.getTags() : "")).append("\n");
             }
         }
 
@@ -210,6 +212,8 @@ public class DataExportImportHelper {
                     eObj.put("recurringInterval", e.getRecurringInterval());
                     eObj.put("nextDueDate", e.getNextDueDate());
                     eObj.put("receiptPath", e.getReceiptPath() != null ? e.getReceiptPath() : "");
+                    eObj.put("notes", e.getNotes() != null ? e.getNotes() : "");
+                    eObj.put("tags", e.getTags() != null ? e.getTags() : "");
                     expensesArr.put(eObj);
                 }
             }
@@ -318,6 +322,8 @@ public class DataExportImportHelper {
                 if (rPath != null && !rPath.isEmpty()) {
                     expense.setReceiptPath(rPath);
                 }
+                expense.setNotes(eObj.optString("notes", ""));
+                expense.setTags(eObj.optString("tags", ""));
                 data.expenses.add(expense);
             }
         }
@@ -342,7 +348,8 @@ public class DataExportImportHelper {
         // Header mapping
         String[] header = rows.get(0);
         int dateCol = -1, titleCol = -1, amountCol = -1, debitCol = -1, creditCol = -1, typeCol = -1,
-                categoryCol = -1, walletCol = -1, recurringCol = -1, intervalCol = -1;
+                categoryCol = -1, walletCol = -1, recurringCol = -1, intervalCol = -1,
+                notesCol = -1, tagsCol = -1;
 
         for (int i = 0; i < header.length; i++) {
             String col = header[i].trim().toLowerCase().replace("\uFEFF", "");
@@ -354,11 +361,11 @@ public class DataExportImportHelper {
                 creditCol = i;
             } else if (col.contains("amount") || col.contains("cost") || col.contains("price") || col.contains("sum") || col.contains("value")) {
                 if (amountCol == -1) amountCol = i;
-            } else if (col.contains("title") || col.contains("name") || col.contains("description") || col.contains("payee") || col.contains("memo") || col.contains("details")) {
+            } else if (col.contains("title") || col.contains("name") || col.contains("description") || col.contains("payee") || col.contains("details")) {
                 if (titleCol == -1) titleCol = i;
             } else if (col.contains("type")) {
                 typeCol = i;
-            } else if (col.contains("category") || col.contains("tag") || col.contains("class")) {
+            } else if (col.contains("category") || col.contains("class")) {
                 categoryCol = i;
             } else if (col.contains("wallet") || col.contains("account") || col.contains("bank")) {
                 walletCol = i;
@@ -366,6 +373,10 @@ public class DataExportImportHelper {
                 recurringCol = i;
             } else if (col.contains("interval")) {
                 intervalCol = i;
+            } else if (col.contains("notes") || col.contains("note") || col.contains("memo") || col.contains("remark") || col.contains("comment")) {
+                notesCol = i;
+            } else if (col.contains("tags") || col.contains("tag") || col.contains("label") || col.contains("hashtag")) {
+                tagsCol = i;
             }
         }
 
@@ -463,6 +474,8 @@ public class DataExportImportHelper {
                 expense.setRecurring(true);
                 expense.setRecurringInterval(intervalStr);
             }
+            if (notesCol != -1) expense.setNotes(getCol(row, notesCol, ""));
+            if (tagsCol != -1) expense.setTags(getCol(row, tagsCol, ""));
             data.expenses.add(expense);
         }
 
@@ -744,6 +757,9 @@ public class DataExportImportHelper {
                         toInsert.setRecurring(e.isRecurring());
                         toInsert.setRecurringInterval(e.getRecurringInterval());
                         toInsert.setNextDueDate(e.getNextDueDate());
+                        toInsert.setReceiptPath(e.getReceiptPath());
+                        toInsert.setNotes(e.getNotes());
+                        toInsert.setTags(e.getTags());
 
                         db.expenseDao().insert(toInsert);
 
