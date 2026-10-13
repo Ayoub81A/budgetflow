@@ -99,7 +99,8 @@ public class SecurityHelper {
         return false;
     }
 
-    private static String hashPin(String pin) {
+    public static String hashPin(String pin) {
+        if (pin == null) return "";
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] encodedhash = digest.digest(pin.getBytes(StandardCharsets.UTF_8));
