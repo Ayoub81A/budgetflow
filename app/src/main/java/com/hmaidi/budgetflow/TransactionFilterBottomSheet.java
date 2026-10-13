@@ -87,6 +87,10 @@ public class TransactionFilterBottomSheet extends BottomSheetDialogFragment {
             chipGroupSort.check(R.id.chip_sort_amount_desc);
         } else if ("amount_asc".equals(criteria.sortBy)) {
             chipGroupSort.check(R.id.chip_sort_amount_asc);
+        } else if ("category_asc".equals(criteria.sortBy)) {
+            chipGroupSort.check(R.id.chip_sort_category_asc);
+        } else if ("wallet_asc".equals(criteria.sortBy)) {
+            chipGroupSort.check(R.id.chip_sort_wallet_asc);
         } else {
             chipGroupSort.check(R.id.chip_sort_date_desc);
         }
@@ -135,6 +139,26 @@ public class TransactionFilterBottomSheet extends BottomSheetDialogFragment {
                 criteria.type = "all";
             }
 
+            // Wallet
+            int checkedWalletChipId = chipGroupWallets.getCheckedChipId();
+            if (checkedWalletChipId != View.NO_ID) {
+                View checkedW = chipGroupWallets.findViewById(checkedWalletChipId);
+                criteria.walletId = (checkedW != null && checkedW.getTag() instanceof Integer)
+                        ? (Integer) checkedW.getTag() : null;
+            } else {
+                criteria.walletId = null;
+            }
+
+            // Category
+            int checkedCatChipId = chipGroupCategories.getCheckedChipId();
+            if (checkedCatChipId != View.NO_ID) {
+                View checkedC = chipGroupCategories.findViewById(checkedCatChipId);
+                criteria.category = (checkedC != null && checkedC.getTag() instanceof String)
+                        ? (String) checkedC.getTag() : null;
+            } else {
+                criteria.category = null;
+            }
+
             // Date
             int dateId = chipGroupDate.getCheckedChipId();
             if (dateId == R.id.chip_date_today) {
@@ -157,6 +181,10 @@ public class TransactionFilterBottomSheet extends BottomSheetDialogFragment {
                 criteria.sortBy = "amount_desc";
             } else if (sortId == R.id.chip_sort_amount_asc) {
                 criteria.sortBy = "amount_asc";
+            } else if (sortId == R.id.chip_sort_category_asc) {
+                criteria.sortBy = "category_asc";
+            } else if (sortId == R.id.chip_sort_wallet_asc) {
+                criteria.sortBy = "wallet_asc";
             } else {
                 criteria.sortBy = "date_desc";
             }
@@ -190,24 +218,25 @@ public class TransactionFilterBottomSheet extends BottomSheetDialogFragment {
 
         // "All Wallets" chip
         Chip allChip = new Chip(requireContext(), null, com.google.android.material.R.style.Widget_MaterialComponents_Chip_Choice);
+        allChip.setId(View.generateViewId());
         allChip.setText("All Wallets");
         allChip.setCheckable(true);
-        allChip.setChecked(criteria.walletId == null);
-        allChip.setOnCheckedChangeListener((btn, isChecked) -> {
-            if (isChecked) criteria.walletId = null;
-        });
+        allChip.setTag(null);
         group.addView(allChip);
 
+        int checkedId = allChip.getId();
         for (Wallet w : walletsList) {
             Chip chip = new Chip(requireContext(), null, com.google.android.material.R.style.Widget_MaterialComponents_Chip_Choice);
+            chip.setId(View.generateViewId());
             chip.setText(w.getName());
             chip.setCheckable(true);
-            chip.setChecked(criteria.walletId != null && criteria.walletId == w.getId());
-            chip.setOnCheckedChangeListener((btn, isChecked) -> {
-                if (isChecked) criteria.walletId = w.getId();
-            });
+            chip.setTag(w.getId());
             group.addView(chip);
+            if (criteria.walletId != null && criteria.walletId.equals(w.getId())) {
+                checkedId = chip.getId();
+            }
         }
+        group.check(checkedId);
     }
 
     private void setupCategoryChips(ChipGroup group) {
@@ -216,23 +245,24 @@ public class TransactionFilterBottomSheet extends BottomSheetDialogFragment {
 
         // "All Categories" chip
         Chip allChip = new Chip(requireContext(), null, com.google.android.material.R.style.Widget_MaterialComponents_Chip_Choice);
+        allChip.setId(View.generateViewId());
         allChip.setText("All Categories");
         allChip.setCheckable(true);
-        allChip.setChecked(criteria.category == null);
-        allChip.setOnCheckedChangeListener((btn, isChecked) -> {
-            if (isChecked) criteria.category = null;
-        });
+        allChip.setTag(null);
         group.addView(allChip);
 
+        int checkedId = allChip.getId();
         for (CategoryModel c : categoriesList) {
             Chip chip = new Chip(requireContext(), null, com.google.android.material.R.style.Widget_MaterialComponents_Chip_Choice);
+            chip.setId(View.generateViewId());
             chip.setText(c.getName());
             chip.setCheckable(true);
-            chip.setChecked(criteria.category != null && criteria.category.equalsIgnoreCase(c.getName()));
-            chip.setOnCheckedChangeListener((btn, isChecked) -> {
-                if (isChecked) criteria.category = c.getName();
-            });
+            chip.setTag(c.getName());
             group.addView(chip);
+            if (criteria.category != null && criteria.category.equalsIgnoreCase(c.getName())) {
+                checkedId = chip.getId();
+            }
         }
+        group.check(checkedId);
     }
 }

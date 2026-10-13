@@ -23,11 +23,22 @@ import androidx.appcompat.widget.SwitchCompat;
 
 public class AddExpenseFragment extends BottomSheetDialogFragment {
 
+    private static final String ARG_PRESELECT_RECURRING = "arg_preselect_recurring";
+    private java.util.List<Wallet> availableWallets = new java.util.ArrayList<>();
+
     String selectedCategory = "";
     boolean isExpense = true;
-    int selectedWalletId = -1; // ← moved to class level
+    int selectedWalletId = -1;
     boolean isRecurring = false;
     String selectedInterval = "monthly";
+
+    public static AddExpenseFragment newInstance(boolean preselectRecurring) {
+        AddExpenseFragment fragment = new AddExpenseFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_PRESELECT_RECURRING, preselectRecurring);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -51,33 +62,43 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         int year = calendar.get(Calendar.YEAR);
         etDate.setText(day + "/" + (month + 1) + "/" + year);
 
-        // Wallet picker
+        // Wallet picker & auto-selection
         WalletViewModel walletViewModel = new ViewModelProvider(requireActivity())
                 .get(WalletViewModel.class);
 
+        walletViewModel.getAllWallets().observe(getViewLifecycleOwner(), wallets -> {
+            availableWallets = wallets != null ? wallets : new java.util.ArrayList<>();
+            // Auto-select the first wallet if none selected yet
+            if (selectedWalletId == -1 && !availableWallets.isEmpty() && getContext() != null) {
+                Wallet first = availableWallets.get(0);
+                selectedWalletId = first.getId();
+                tvSelectedWallet.setText(first.getName());
+                tvSelectedWallet.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+            }
+        });
+
         tvSelectedWallet.setOnClickListener(v -> {
-            walletViewModel.getAllWallets().observe(getViewLifecycleOwner(), wallets -> {
-                if (wallets == null || wallets.isEmpty()) {
-                    Toast.makeText(getContext(),
-                            "Please create a wallet first", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+            if (getContext() == null) return;
+            if (availableWallets.isEmpty()) {
+                Toast.makeText(getContext(), "Please create a wallet first", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                String[] walletNames = new String[wallets.size()];
-                for (int i = 0; i < wallets.size(); i++) {
-                    walletNames[i] = wallets.get(i).getName();
-                }
+            String[] walletNames = new String[availableWallets.size()];
+            for (int i = 0; i < availableWallets.size(); i++) {
+                walletNames[i] = availableWallets.get(i).getName();
+            }
 
-                new AlertDialog.Builder(getContext())
-                        .setTitle("Select Wallet")
-                        .setItems(walletNames, (dialog, which) -> {
-                            selectedWalletId = wallets.get(which).getId();
-                            tvSelectedWallet.setText(wallets.get(which).getName());
-                            tvSelectedWallet.setTextColor(
-                                    ContextCompat.getColor(getContext(), R.color.text_primary));
-                        })
-                        .show();
-            });
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Select Wallet")
+                    .setItems(walletNames, (dialog, which) -> {
+                        Wallet chosen = availableWallets.get(which);
+                        selectedWalletId = chosen.getId();
+                        tvSelectedWallet.setText(chosen.getName());
+                        tvSelectedWallet.setTextColor(
+                                ContextCompat.getColor(requireContext(), R.color.text_primary));
+                    })
+                    .show();
         });
 
         // Toggle buttons
@@ -209,10 +230,21 @@ public class AddExpenseFragment extends BottomSheetDialogFragment {
         // Default monthly selected
         highlightInterval(view, btnMonthly);
 
+        boolean preselectRecurring = false;
+        if (getArguments() != null) {
+            preselectRecurring = getArguments().getBoolean(ARG_PRESELECT_RECURRING, false);
+        }
+
         switchRecurring.setOnCheckedChangeListener((btn, isChecked) -> {
             isRecurring = isChecked;
             layoutInterval.setVisibility(isChecked ? View.VISIBLE : View.GONE);
         });
+
+        if (preselectRecurring) {
+            switchRecurring.setChecked(true);
+            isRecurring = true;
+            layoutInterval.setVisibility(View.VISIBLE);
+        }
 
         btnDaily.setOnClickListener(v -> {
             selectedInterval = "daily";

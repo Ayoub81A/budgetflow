@@ -488,7 +488,7 @@
 
                 <TextView
                     android:id="@+id/tv_home_recurring_summary"
-                    android:text="3 Subscriptions • $45.00/mo"
+                    android:text="Recurring &amp; Subscriptions"
                     android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:textStyle="bold"

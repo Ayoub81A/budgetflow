@@ -180,6 +180,18 @@ public class AllTransactionsFragment extends Fragment {
                     return Double.compare(e2.getAmount(), e1.getAmount());
                 case "amount_asc":
                     return Double.compare(e1.getAmount(), e2.getAmount());
+                case "category_asc": {
+                    String c1 = e1.getCategory() != null ? e1.getCategory() : "";
+                    String c2 = e2.getCategory() != null ? e2.getCategory() : "";
+                    int cmp = c1.compareToIgnoreCase(c2);
+                    return cmp != 0 ? cmp : compareDates(e2.getDate(), e1.getDate());
+                }
+                case "wallet_asc": {
+                    String w1 = walletNameMap.getOrDefault(e1.getWalletId(), "");
+                    String w2 = walletNameMap.getOrDefault(e2.getWalletId(), "");
+                    int cmp = w1.compareToIgnoreCase(w2);
+                    return cmp != 0 ? cmp : compareDates(e2.getDate(), e1.getDate());
+                }
                 case "date_desc":
                 default:
                     int dateComp = compareDates(e2.getDate(), e1.getDate());
@@ -250,6 +262,8 @@ public class AllTransactionsFragment extends Fragment {
             if ("amount_desc".equals(criteria.sortBy)) sortLabel = "Sort: High to Low";
             else if ("amount_asc".equals(criteria.sortBy)) sortLabel = "Sort: Low to High";
             else if ("date_asc".equals(criteria.sortBy)) sortLabel = "Sort: Oldest First";
+            else if ("category_asc".equals(criteria.sortBy)) sortLabel = "Sort: Category (A-Z)";
+            else if ("wallet_asc".equals(criteria.sortBy)) sortLabel = "Sort: Wallet (A-Z)";
 
             addFilterChip(sortLabel, () -> {
                 criteria.sortBy = "date_desc";

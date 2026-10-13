@@ -48,7 +48,7 @@ public class TransactionFilterCriteria implements Serializable {
         }
 
         // 2. Wallet
-        if (walletId != null && e.getWalletId() != walletId) {
+        if (walletId != null && !walletId.equals(e.getWalletId())) {
             return false;
         }
 

@@ -233,7 +233,7 @@ public class HomeFragment extends Fragment {
                         else monthlySum += item.getAmount();
                     }
                 }
-                tvHomeRecurringSummary.setText(items.size() + (items.size() == 1 ? " Subscription • " : " Subscriptions • ") + CurrencyHelper.format(getContext(), monthlySum) + "/mo");
+                tvHomeRecurringSummary.setText("Recurring & Subscriptions • " + items.size() + " active");
             }
         });
 

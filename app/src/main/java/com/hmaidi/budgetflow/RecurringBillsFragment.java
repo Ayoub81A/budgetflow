@@ -178,11 +178,8 @@ public class RecurringBillsFragment extends Fragment implements RecurringBillAda
     }
 
     private void openAddRecurring() {
-        // Navigate to AddExpenseFragment
-        requireActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new AddExpenseFragment())
-                .addToBackStack(null)
-                .commit();
+        AddExpenseFragment sheet = AddExpenseFragment.newInstance(true);
+        sheet.show(getParentFragmentManager(), "AddRecurringExpense");
     }
 
     @Override

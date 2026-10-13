@@ -256,6 +256,22 @@
                 style="@style/Widget.MaterialComponents.Chip.Choice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_sort_category_asc"
+                android:text="Category (A-Z)"
+                android:checkable="true"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_sort_wallet_asc"
+                android:text="Wallet (A-Z)"
+                android:checkable="true"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
         </com.google.android.material.chip.ChipGroup>
 
         <!-- Section 6: Amount Range (Min / Max) -->
